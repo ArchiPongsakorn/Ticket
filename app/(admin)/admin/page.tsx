@@ -92,7 +92,9 @@ export default function Home() {
       </Sidebar>
 
       
-      {content}
+      <main className="min-h-full min-w-0 flex-1">
+        {content}
+      </main>
       <DemoRoleBar role="admin" />
     </SidebarProvider>
   );
