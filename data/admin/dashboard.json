@@ -1,0 +1,124 @@
+{
+  "stats": [
+    {
+      "label": "บัตรที่อนุมัติแล้ว",
+      "value": "248",
+      "detail": "จากบัตรทั้งหมด",
+      "valueClass": "text-[#4da6ff]"
+    },
+    {
+      "label": "รอตรวจสอบ",
+      "value": "12",
+      "detail": "ต้องดำเนินการ",
+      "valueClass": "text-[#ffc857]"
+    },
+    {
+      "label": "เข้ามาในงานแล้ว",
+      "value": "22 คน",
+      "valueClass": "text-[#63e6ae]"
+    },
+    {
+      "label": "Token ที่เติมแล้ว",
+      "value": "3,500",
+      "valueClass": "text-[#a887ff]"
+    }
+
+
+  ],
+  "orders": [
+    { "id": "#0041", "buyer": "สมชาย ใจดี", "item": "บัตร × 2" , "price-ticket": "3000" , "price-shirt": "0" },
+    { "id": "#0042", "buyer": "สุดา แสงทอง", "item": "บัตร × 1 · เสื้อ × 1" , "price-ticket": "1500" , "price-shirt": "1500" },
+    { "id": "#0043", "buyer": "ประเสริฐ มีสุข", "item": "เสื้อ × 2" , "price-ticket": "0" , "price-shirt": "3000"},
+    { "id": "#0044", "buyer": "วารี พันทรัพย์", "item": "บัตร × 3" , "price-ticket": "0" , "price-shirt": "4500"},
+    { "id": "#0045", "buyer": "ไอติม โอริโอ้", "item": "บัตร × 2" , "price-ticket": "1500" , "price-shirt": "4500"}
+    
+  ],
+  "auditLogs": [
+    {
+      "time": "19:00",
+      "actor": "Admin หลัก",
+      "action": "แก้ราคา",
+      "detail": "บัตรเข้างาน [ราคาเดิม] → [ราคาใหม่]"
+    },
+    {
+      "time": "19:00",
+      "actor": "Admin กลาง",
+      "action": "ตรวจสลิป",
+      "detail": "Approve คำสั่งซื้อ #0042"
+    },
+    {
+      "time": "19:00",
+      "actor": "Admin กลาง",
+      "action": "ตรวจสลิป",
+      "detail": "Reject คำสั่งซื้อ #0045 เหตุผล: [เหตุผล]"
+    },
+    {
+      "time": "19:00",
+      "actor": "Staff 1",
+      "action": "เติม Token",
+      "detail": "สุดา แสงทอง +100"
+    },
+    {
+      "time": "19:00",
+      "actor": "Admin กลาง",
+      "action": "จัดการร้านค้า",
+      "detail": "เลือก [ร้านที่ 3]"
+    },
+    {
+      "time": "19:00",
+      "actor": "Staff 2",
+      "action": "สแกนเข้างาน",
+      "detail": "ธนา สุขสันต์ ผ่าน"
+    }
+  ],
+  "users": [
+    { "name": "สมชาย ใจดี", "email": "somchai@example.com", "ticket": 2, "shirt": 0, "token": 0, "status": "รอตรวจสอบ" },
+    { "name": "สุดา แสงทอง", "email": "suda@example.com", "ticket": 1, "shirt": 1, "token": 100, "status": "อนุมัติแล้ว" },
+    { "name": "ประเสริฐ มีสุข", "email": "prassert@example.com", "ticket": 0, "shirt": 2, "token": 0, "status": "รอตรวจสอบ" },
+    { "name": "วารี พุนทรัพย์", "email": "waree@example.com", "ticket": 3, "shirt": 0, "token": 250, "status": "อนุมัติแล้ว" },
+    { "name": "นภา รุ่งเรือง", "email": "napa@example.com", "ticket": 1, "shirt": 0, "token": 0, "status": "ไม่อนุมัติ" },
+    { "name": "ธนา สุขสันต์", "email": "thana@example.com", "ticket": 2, "shirt": 2, "token": 50, "status": "อนุมัติแล้ว" }
+  ],
+  "salesData": [
+    { "day": "Mon", "ticket": 260, "shirt": 140 },
+    { "day": "Tue", "ticket": 320, "shirt": 200 },
+    { "day": "Wed", "ticket": 270, "shirt": 190 },
+    { "day": "Thu", "ticket": 430, "shirt": 250 },
+    { "day": "Fri", "ticket": 390, "shirt": 250 },
+    { "day": "Sat", "ticket": 470, "shirt": 290 },
+    { "day": "Sun", "ticket": 430, "shirt": 270 }
+  ],
+
+  "storeSales": [
+    {
+      "name": "ร้านที่ 1",
+      "progress": 90,
+      "barColor": "oklch(54.6% 0.245 262.881)",
+      "Sale": "5000"
+    },
+    {
+      "name": "ร้านที่ 2",
+      "progress": 80,
+      "barColor": "oklch(58.5% 0.233 277.117)",
+      "Sale": "4500"
+    },
+    {
+  "name": "ร้านที่ 3",
+  "progress": 68,
+  "barColor": "oklch(76.5% 0.177 163.223)",
+  "Sale": "3000"
+    },
+    {
+  "name": "ร้านที่ 4",
+  "progress": 50,
+  "barColor": "oklch(79.5% 0.184 86.047)",
+  "Sale": "2500"
+    },
+    {
+  "name": "ร้านที่ 5",
+  "progress": 40,
+  "barColor": "oklch(76.9% 0.188 70.08)",
+  "Sale": "2000"
+    }
+  ]
+}

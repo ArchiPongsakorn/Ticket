@@ -1,0 +1,156 @@
+/* ===== Cart pill (บน Header) ===== */
+.cartPill { position: relative; display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); font: 500 .95rem var(--font-display); transition: background .2s; }
+.cartPill:hover { background: var(--surface-2); }
+.cartCount { min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); font: 600 .78rem var(--font-display); }
+.cartCount.bump { animation: bump .35s var(--ease); }
+@keyframes bump { 40% { transform: scale(1.35); } }
+
+/* ===== Page ===== */
+.pageHead { padding: 36px 0 20px; display: grid; gap: 14px; }
+.pageHead h1 { font: 700 clamp(1.8rem, 4.4vw, 2.6rem)/1.1 var(--font-display); }
+.noteCard {
+  display: flex; gap: 12px; align-items: flex-start; padding: 14px 18px; border-radius: 16px;
+  border: 1px solid var(--line); background: rgba(16, 26, 44, .7); color: var(--dim); font-size: .95rem;
+}
+.noteCard b { color: var(--text); font-weight: 500; }
+.noteCard svg { flex: none; margin-top: 2px; color: var(--accent); }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 28px; align-items: start; padding-bottom: 96px; }
+
+/* ===== Products ===== */
+.group + .group { margin-top: 36px; }
+.groupTitle { font: 600 1.35rem var(--font-display); margin-bottom: 4px; }
+.groupSub { color: var(--dim); font-size: .92rem; margin-bottom: 16px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; }
+.card { display: flex; flex-direction: column; gap: 10px; padding: 12px; border-radius: 20px; background: var(--surface); border: 1px solid var(--line); transition: border-color .2s, transform .3s var(--ease); }
+.card:hover { border-color: #3a5078; transform: translateY(-3px); }
+.poster {
+  position: relative; overflow: hidden; aspect-ratio: 4 / 3; border-radius: 12px; display: grid; place-items: center;
+  background: linear-gradient(160deg, #1a2a47, #0f1a2e);
+}
+.poster::after { content: ""; position: absolute; width: 80%; aspect-ratio: 1; border-radius: 50%; top: -40%; right: -30%; background: radial-gradient(circle at 35% 35%, rgba(77, 166, 255, .22), transparent 65%); }
+.glyph { position: relative; font: 700 2.4rem var(--font-display); color: rgba(220, 232, 255, .85); }
+.badge { position: absolute; left: 8px; top: 8px; z-index: 1; padding: 2px 10px; border-radius: 999px; font-size: .72rem; background: rgba(10, 18, 32, .7); border: 1px solid var(--line); }
+.card h3 { font: 500 1.02rem/1.3 var(--font-display); }
+.desc { color: var(--dim); font-size: .85rem; min-height: 2.6em; }
+.optsLabel { font-size: .78rem; color: var(--dim); }
+.opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.opt { min-width: 40px; min-height: 34px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line); background: none; cursor: pointer; font-size: .85rem; transition: background .15s, border-color .15s; }
+.opt:hover { border-color: #3a5078; }
+.opt[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.buy { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 6px; }   /* ดันแถวราคาและปุ่มลงล่างสุดของการ์ดเสมอ */
+.price { display: flex; flex-direction: column; justify-content: flex-end; min-height: 2.9em; }
+.price b { font: 600 1.2rem var(--font-display); }
+.price small { display: block; font-size: .75rem; color: var(--dim); text-decoration: line-through; }
+
+/* ===== Cart ===== */
+.cart { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 84px); display: grid; gap: 14px; padding: 20px; border-radius: 22px; background: rgba(16, 26, 44, .85); border: 1px solid var(--line); backdrop-filter: blur(10px); }
+.cart h2 { font: 600 1.3rem var(--font-display); }
+.cartEmpty { padding: 22px 0; text-align: center; color: var(--dim); font-size: .92rem; }
+.lines { list-style: none; padding: 0; display: grid; gap: 12px; max-height: 46vh; overflow: auto; }
+.line { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.lineName { font: 500 .95rem/1.3 var(--font-display); }
+.lineOpt { font-size: .8rem; color: var(--dim); }
+.lineTotal { font: 500 .95rem var(--font-display); text-align: right; }
+.lineCtrl { display: flex; align-items: center; gap: 4px; grid-column: 1 / -1; }
+.step { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line); background: none; cursor: pointer; font-size: 1rem; line-height: 1; }
+.step:hover { background: var(--surface-2); }
+.step:disabled { opacity: .35; cursor: not-allowed; }
+.qty { min-width: 28px; text-align: center; font-variant-numeric: tabular-nums; }
+.remove { margin-left: auto; background: none; border: 0; color: var(--dim); font-size: .82rem; text-decoration: underline; cursor: pointer; }
+.remove:hover { color: var(--text); }
+.sum { display: grid; gap: 6px; }
+.sumRow { display: flex; justify-content: space-between; font-size: .92rem; color: var(--dim); }
+.sumRowTotal { color: var(--text); font: 600 1.2rem var(--font-display); padding-top: 8px; border-top: 1px solid var(--line); }
+.cartNote { font-size: .82rem; color: var(--dim); }
+
+.mobilebar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; display: none; align-items: center; gap: 14px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px)); background: rgba(10, 18, 32, .92); backdrop-filter: blur(12px); border-top: 1px solid var(--line);
+}
+.mobilebar div { margin-right: auto; font-size: .85rem; color: var(--dim); }
+.mobilebar b { display: block; color: var(--text); font: 600 1.15rem var(--font-display); }
+
+/* ===== Checkout dialog ===== */
+.dlg { display: grid; gap: 16px; padding: 24px; }
+.dlg h2 { font: 600 1.35rem var(--font-display); }
+.dlgList { list-style: none; padding: 0; display: grid; gap: 8px; font-size: .92rem; }
+.dlgList li { display: flex; justify-content: space-between; gap: 12px; }
+.dlgList span:first-child { color: var(--dim); }
+.pay { display: grid; gap: 8px; border: 0; padding: 0; }
+.pay legend { font-size: .9rem; margin-bottom: 8px; }
+.pay label { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; cursor: pointer; }
+.pay label:has(input:checked) { border-color: var(--accent); background: rgba(77, 166, 255, .08); }
+.pay input { accent-color: var(--accent); }
+.dlgActions { display: flex; gap: 10px; }
+.dlgActions button { flex: 1; }
+.done { display: grid; gap: 10px; justify-items: center; text-align: center; padding: 12px 0; }
+.doneIcon { width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); }
+.done p { color: var(--dim); font-size: .92rem; }
+.done code { font: 600 1.1rem var(--font-display); color: var(--text); letter-spacing: .05em; }
+
+/* ===== Stepper + ticket forms ===== */
+.steps { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; counter-reset: s; }
+.steps li { display: flex; align-items: center; gap: 8px; padding: 5px 14px 5px 5px; border-radius: 999px; border: 1px solid var(--line); color: var(--dim); font-size: .88rem; }
+.steps li::before { counter-increment: s; content: counter(s); width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--line); font: 500 .8rem var(--font-display); }
+.steps li.isCurrent { color: var(--text); border-color: var(--accent); }
+.steps li.isCurrent::before { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.steps li.isDone::before { content: "\2713"; color: var(--accent); }
+.steps li.isSkipped { opacity: .45; text-decoration: line-through; }
+
+.perkList { list-style: none; padding: 0; display: grid; gap: 3px; font-size: .82rem; color: var(--dim); }
+.perkList li::before { content: "\2022"; color: var(--accent); margin-right: 6px; }
+.token { align-self: flex-start; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--accent); color: var(--accent); font: 500 .78rem var(--font-display); }
+
+.attend { display: grid; gap: 14px; max-width: 760px; padding-bottom: 96px; }
+.attendHead { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 6px 16px; }
+.attendProgress { color: var(--accent); font: 500 .95rem var(--font-display); }
+.attList { display: grid; gap: 14px; }
+.attWrap { display: grid; gap: 14px; }
+.ticketCard { border: 1px solid var(--line); border-radius: 20px; background: var(--surface); }
+.ticketCard summary { list-style: none; display: flex; align-items: center; gap: 14px; padding: 16px 20px; cursor: pointer; }
+.ticketCard summary::-webkit-details-marker { display: none; }
+.tcNum { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-2); font: 600 .95rem var(--font-display); }
+.tcText { display: grid; gap: 2px; }
+.tcTitle { font: 500 1rem var(--font-display); }
+.tcSub { font-size: .82rem; color: var(--dim); }
+.tcStatus { margin-left: auto; flex: none; padding: 3px 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--dim); font-size: .8rem; }
+.tcStatus.ok { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.tcBody { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; padding: 4px 20px 22px; }
+.attendActions { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+@media (max-width: 560px) { .tcBody { grid-template-columns: 1fr; } .tcStatus { display: none; } }
+
+/* ปุ่มย้อนกลับแบบมินิมอล */
+.back { display: inline-flex; align-items: center; gap: 6px; margin: -4px 0 0 -8px; justify-self: start; min-height: 40px; padding: 0 14px 0 8px; border: 0; border-radius: 999px; background: none; color: var(--dim); font: 500 .95rem var(--font-display); cursor: pointer; transition: color .2s, background .2s; }
+.back:hover { color: var(--text); background: var(--surface-2); }
+.back svg { transition: transform .2s var(--ease); }
+.back:hover svg { transform: translateX(-3px); }
+
+/* ===== Fulfilment + size guide ===== */
+.hint { font-size: .82rem; color: var(--dim); }
+.linkbtn { margin-left: 6px; padding: 0; border: 0; background: none; color: var(--accent); font-size: .78rem; text-decoration: underline; cursor: pointer; }
+.method { display: flex; align-items: flex-start; gap: 12px; padding: 14px; border: 1px solid var(--line); border-radius: 14px; cursor: pointer; }
+.method:has(input:checked) { border-color: var(--accent); background: rgba(77, 166, 255, .08); }
+.method input { accent-color: var(--accent); margin-top: 4px; }
+.method b { display: block; font: 500 1rem var(--font-display); }
+.method small { color: var(--dim); font-size: .82rem; }
+.sizeTable { width: 100%; border-collapse: collapse; font-size: .92rem; }
+.sizeTable th, .sizeTable td { padding: 8px 10px; border-bottom: 1px solid var(--line); text-align: left; }
+.sizeTable th { color: var(--dim); font-weight: 500; }
+
+/* ===== Responsive & motion ===== */
+@media (max-width: 860px) {
+  .layout { grid-template-columns: 1fr; padding-bottom: 120px; }
+  .cart { position: static; }
+  .mobilebar.hasItems { display: flex; }
+  .cartPill span:not(.cartCount) { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .cartCount.bump { animation: none; } .card { transition: none; } }
+
+
+
+.root { min-height: 100vh; }
+
+/* ติ๊กเลือกวิธีรับของทีละชิ้น */
+.pieceMethods { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pieceError { grid-column: 1 / -1; font-size: .82rem; color: var(--danger); }
+@media (max-width: 560px) { .pieceMethods { grid-template-columns: 1fr; } }

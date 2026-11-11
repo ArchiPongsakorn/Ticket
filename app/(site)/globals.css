@@ -1,0 +1,64 @@
+/* ========== 1. TOKENS (สี ฟอนต์ ใช้ร่วมทั้งเว็บ แก้ที่นี่ที่เดียว) ========== */
+:root {
+  /* โทนกรมท่าเข้ม + ฟ้าสว่าง (แก้สีทั้งเว็บที่ชุดนี้) */
+  --bg: #0a1220;
+  --surface: #101a2c;
+  --surface-2: #16233a;
+  --line: #22314d;
+  --text: #eef3fb;
+  --dim: #93a4be;
+  --accent: #4da6ff;          /* สีเน้น: ฟ้าสว่าง (ปุ่ม ลิงก์ ไฮไลต์) */
+  --on-accent: #06152b;       /* ตัวอักษรบนพื้นสีเน้น */
+  --btn-bg: #4da6ff;
+  --btn-fg: #06152b;
+  --btn-hover: #7bbcff;
+  --header-bg: rgba(10, 18, 32, .85);
+  --danger: #ff7b7b;
+  --ease: cubic-bezier(.22, .8, .2, 1);
+  --slide-ms: 6000ms;         /* เวลาเลื่อนสไลด์แบนเนอร์อัตโนมัติ */
+  --font-display: var(--font-kanit), var(--font-noto), system-ui, sans-serif;
+  --font-body: var(--font-noto), var(--font-kanit), system-ui, sans-serif;
+  color-scheme: dark;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ========== 2. BASE ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 84px); }
+body {
+  min-height: 100vh;
+  background: radial-gradient(ellipse 60% 45% at 85% -5%, #15284d, transparent 70%), var(--bg);
+  background-repeat: no-repeat;
+  color: var(--text);
+  font-family: var(--font-body);
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px);
+  background: var(--header-bg); z-index: 30;
+}
+a { color: inherit; text-decoration: none; }
+button, select, input, textarea { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* ========== 3. UTILITIES ========== */
+.wrap { width: min(1088px, 100% - 32px); margin-inline: auto; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+
+/* ========== 4. BUTTONS (ใช้ร่วมทุกหน้า สีมาจาก tokens) ========== */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 46px; padding: 0 24px; border-radius: 999px; cursor: pointer;
+  font: 600 1rem var(--font-display);
+  border: 1px solid var(--btn-bg); background: var(--btn-bg); color: var(--btn-fg);
+  transition: background .2s, border-color .2s, transform .2s var(--ease), opacity .2s;
+}
+.btn:hover { background: var(--btn-hover); border-color: var(--btn-hover); transform: translateY(-1px); }
+.btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+.btn-ghost { background: transparent; color: var(--text); border-color: var(--line); font-weight: 500; }
+.btn-ghost:hover { background: var(--surface-2); border-color: #3a5078; }
+.btn-sm { min-height: 40px; padding: 0 20px; font-size: .95rem; }
+.btn-block { width: 100%; }
+
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }

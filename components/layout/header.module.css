@@ -1,0 +1,11 @@
+/* ===== Header ===== */
+.header { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--header-bg); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
+.headerRow { display: flex; align-items: center; gap: 28px; min-height: 68px; }
+.logo { display: flex; align-items: center; gap: 10px; font: 700 1.25rem var(--font-display); margin-right: auto; }
+.logoMark { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); font-size: 1.1rem; }
+.nav { display: flex; gap: 28px; }
+.navLink { position: relative; padding: 8px 0; font: 500 1rem var(--font-display); color: var(--dim); transition: color .2s; }
+.navLink:hover, .navLink.isCurrent { color: var(--text); }
+.navLink.isCurrent::after { content: ""; position: absolute; inset: auto 0 0; height: 2px; border-radius: 2px; background: var(--accent); }
+
+@media (max-width: 700px) { .headerRow { gap: 12px; } .logoText { display: none; } .nav { gap: 16px; } }
