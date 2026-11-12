@@ -2,7 +2,7 @@ import { EVENT } from "../../data/event";
 import { cx } from "../../lib/cx";
 import s from "./landing.module.css";
 
-/** การ์ดข้อมูลงาน: วันที่จัดงานและสถานที่ (2 ช่องเท่ากัน จัดกึ่งกลาง) */
+/** การ์ดข้อมูลงาน: วันที่จัดงานและสถานที่ ( */
 export default function InfoStrip() {
   return (
     <section className={cx(s.info, s.reveal)} style={{ "--d": ".2s" }} aria-label="ข้อมูลงาน">

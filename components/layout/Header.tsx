@@ -1,3 +1,6 @@
+"use client";
+
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { cx } from "../../lib/cx";
 import s from "./header.module.css";
@@ -14,10 +17,27 @@ interface HeaderProps {
   children?: import("react").ReactNode;
 }
 
-export default function Header({ current, children }: HeaderProps) {
+export default function Header({
+  current,
+  children,
+}: HeaderProps) {
+  // ตรวจสอบว่าอยู่หน้า URL ไหน
+  const pathname = usePathname();
+
+  // ตรวจสอบว่าเป็นหน้า Login หรือ Register หรือไม่
+  const isAuthPage =
+    pathname === "/login" ||
+    pathname === "/register";
+
+  // หน้า Login/Register ให้แสดงเฉพาะหน้าแรก
+  const visibleLinks = isAuthPage
+    ? LINKS.filter((link) => link.id === "home")
+    : LINKS;
+
   return (
     <header className={s.header}>
       <div className={cx("wrap", s.headerRow)}>
+
         {/* โลโก้เว็บไซต์ */}
         <Link className={s.logo} href="/">
           <span className={s.logoMark} aria-hidden="true">
@@ -28,12 +48,18 @@ export default function Header({ current, children }: HeaderProps) {
 
         {/* เมนูหลัก */}
         <nav className={s.nav} aria-label="เมนูหลัก">
-          {LINKS.map((l) => {
-            const className = cx(s.navLink, current === l.id && s.isCurrent);
+          {visibleLinks.map((l) => {
+            const className = cx(
+              s.navLink,
+              current === l.id && s.isCurrent
+            );
 
             if (l.id === "shop") {
               return (
-                <ShopLink key={l.id} className={className}>
+                <ShopLink
+                  key={l.id}
+                  className={className}
+                >
                   {l.label}
                 </ShopLink>
               );
@@ -44,7 +70,9 @@ export default function Header({ current, children }: HeaderProps) {
                 key={l.id}
                 href={l.href}
                 className={className}
-                aria-current={current === l.id ? "page" : undefined}
+                aria-current={
+                  current === l.id ? "page" : undefined
+                }
               >
                 {l.label}
               </Link>
@@ -52,11 +80,12 @@ export default function Header({ current, children }: HeaderProps) {
           })}
         </nav>
 
-        {/* ปุ่มหรือองค์ประกอบเดิมจากหน้าเว็บ */}
-        {children}
+        {/* องค์ประกอบเดิม ซ่อนในหน้า Login */}
+        {!isAuthPage && children}
 
-        {/* ระบบโปรไฟล์ผู้ใช้งาน */}
-        <UserNav />
+        {/* โปรไฟล์ User ซ่อนในหน้า Login */}
+        {!isAuthPage && <UserNav />}
+
       </div>
     </header>
   );

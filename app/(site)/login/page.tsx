@@ -7,7 +7,11 @@ import s from "@/components/auth/auth.module.css";
 export const metadata = { title: "เข้าสู่ระบบ | TicketCSI200" };
 
 /** /login (เปิดแท็บสมัครสมาชิกด้วย /login?tab=register) */
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
   const { tab } = await searchParams;
   return (
     <div className={s.page}>

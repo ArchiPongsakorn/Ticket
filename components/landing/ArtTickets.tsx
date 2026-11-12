@@ -7,7 +7,7 @@ function Ticket({ variant, label, no }: { variant: string; label: string; no: st
       <div className={s.ticketMain}>
         <small>{label}</small>
         <strong>งานเลี้ยงรุ่น CSI200</strong>
-        <em>19 DEC 2026</em>
+        <em>20 DEC 2026</em>
       </div>
       <div className={s.ticketStub}>{no}</div>
     </div>
