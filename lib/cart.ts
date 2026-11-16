@@ -5,7 +5,13 @@ import { PRODUCTS_BY_ID } from "../data/catalog";
 export const lineKey = (line: CartLine): string => `${line.id}|${line.option}`;
 
 export function summarize(lines: CartLine[]): CartTotals {
-  const sum = { count: 0, total: 0, tokens: 0, hasTicket: false, hasMerch: false };
+  const sum = {
+    count: 0,
+    total: 0,
+    tokens: 0,
+    hasTicket: false,
+    hasMerch: false,
+  };
   for (const l of lines) {
     const p = PRODUCTS_BY_ID[l.id];
     sum.count += l.qty;

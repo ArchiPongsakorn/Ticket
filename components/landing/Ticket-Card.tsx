@@ -6,7 +6,7 @@ function Ticket({ variant, label, no }: { variant: string; label: string; no: st
     <div className={cx(s.ticket, variant)}>
       <div className={s.ticketMain}>
         <small>{label}</small>
-        <strong>งานเลี้ยงรุ่น CSI200</strong>
+        <strong>งานเลี้ยงรุ่น CSI</strong>
         <em>20 DEC 2026</em>
       </div>
       <div className={s.ticketStub}>{no}</div>

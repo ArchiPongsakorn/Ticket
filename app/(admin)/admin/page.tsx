@@ -6,9 +6,9 @@ import { getDemoSession } from "@/lib/mock-auth";
 import DemoRoleBar from "@/components/DemoRoleBar";
 import AdminMenu from "@/components/admin/admin-menu";
 import AuditLogContent from "@/components/admin/audit-log-content";
-import BlankPageContent from "@/components/admin/blank-page-content";
 import CheckSlipContent from "@/components/admin/check-slip-content";
 import DashboardContent from "@/components/admin/dashboard-content";
+import EventTokenManagementSystem from "./event-tokens/page";
 import ReportContent from "@/components/admin/report-content";
 import StoreManagementContent from "@/components/admin/store-management-content";
 import UserManagementContent from "@/components/admin/user-management-content";
@@ -53,7 +53,18 @@ export default function Home() {
   } else if (activePage === "users") {
     content = <UserManagementContent />;
   } else if (["Token", "scan-qr", "pricing", "shop", "scan-qr-shop"].includes(activePage)) {
-    content = <BlankPageContent />;
+    const section: "topup" | "checkin" | "products" | "pos" | "store" | "shop-scan" = activePage === "Token"
+      ? "topup"
+      : activePage === "scan-qr"
+        ? "checkin"
+        : activePage === "pricing"
+          ? "products"
+          : activePage === "shop"
+            ? "store"
+            : activePage === "scan-qr-shop"
+              ? "shop-scan"
+              : "pos";
+    content = <EventTokenManagementSystem section={section} />;
   }
 
   if (!canView) return <div role="status" style={{ padding: 32 }}>กำลังตรวจสอบสิทธิ์บัญชี Demo…</div>;

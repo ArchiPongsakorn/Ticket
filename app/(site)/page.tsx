@@ -1,8 +1,8 @@
 import Link from "next/link";
 import Header from "@/components/layout/Header";
-import HeroCarousel from "@/components/landing/HeroCarousel";
-import InfoStrip from "@/components/landing/InfoStrip";
-import OrderSteps from "@/components/landing/OrderSteps";
+import HeroCarousel from "@/components/landing/Banner";
+import InfoStrip from "@/components/landing/Box";
+import OrderSteps from "@/components/landing/4";
 import { cx } from "@/lib/cx";
 import s from "@/components/landing/landing.module.css";
 
@@ -10,7 +10,7 @@ import s from "@/components/landing/landing.module.css";
 export default function HomePage() {
   return (
     <div className={s.page}>
-      <Header current="home"/>
+      <Header current="home" />
       <main className={cx("wrap", s.stage)}>
         <HeroCarousel />
         <InfoStrip />

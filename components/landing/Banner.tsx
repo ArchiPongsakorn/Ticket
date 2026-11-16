@@ -2,17 +2,18 @@
 import Link from "next/link";
 import { useCarousel } from "../../hooks/useCarousel";
 import { cx } from "../../lib/cx";
-import ArtTickets from "./ArtTickets";
-import ArtTee from "./ArtTee";
+import ArtTickets from "./Ticket-Card";
+import ArtTee from "./T";
 import s from "./landing.module.css";
 import ShopLink from "@/components/auth/ShopLink";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 /** เนื้อหาโฆษณาแต่ละสไลด์ (เพิ่ม/แก้สไลด์ที่นี่) */
 const SLIDES = [
   {
     id: "tickets",
     tone: "slideA",
-    title: "งานเลี้ยงรุ่น CSI200",
+    title: "งานเลี้ยงรุ่น CSI",
     text: "หนึ่งวันแห่งความทรงจำ กลับมาพบกันอีกครั้ง",
     cta: "ซื้อบัตร",
     Art: ArtTickets,
@@ -20,7 +21,7 @@ const SLIDES = [
   {
     id: "merch",
     tone: "slideB",
-    title: "เสื้อและของที่ระลึกประจำงาน",
+    title: "เสื้อและของที่ระลึก",
     text: "จองล่วงหน้าพร้อมบัตร รับของที่หน้างานโดยไม่ต้องรอคิว",
     cta: "เลือกซื้อ",
     Art: ArtTee,
@@ -91,7 +92,7 @@ export default function HeroCarousel() {
           onClick={prev}
           aria-label="โฆษณาก่อนหน้า"
         >
-          <Chevron d="m15 5-7 7 7 7" />
+          <ChevronLeft size={24} strokeWidth={2} />
         </button>
         <button
           type="button"
@@ -99,22 +100,9 @@ export default function HeroCarousel() {
           onClick={next}
           aria-label="โฆษณาถัดไป"
         >
-          <Chevron d="m9 5 7 7-7 7" />
+          <ChevronRight size={24} strokeWidth={2} />
         </button>
 
-        <svg
-          className={s.decoStar}
-          viewBox="0 0 40 40"
-          aria-hidden="true"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="8"
-        >
-          <path d="M20 2v36M4.4 11l31.2 18M35.6 11 4.4 29" />
-        </svg>
-        <div className={s.decoTicket} aria-hidden="true">
-          TICKET
-        </div>
       </div>
 
       <div className={s.dots} role="tablist" aria-label="เลือกโฆษณา">

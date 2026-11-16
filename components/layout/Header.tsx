@@ -41,9 +41,9 @@ export default function Header({
         {/* โลโก้เว็บไซต์ */}
         <Link className={s.logo} href="/">
           <span className={s.logoMark} aria-hidden="true">
-            A
+            AAA
           </span>
-          <span className={s.logoText}>AAA</span>
+          <span className={s.logoText}>Ticket</span>
         </Link>
 
         {/* เมนูหลัก */}

@@ -10,12 +10,12 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Header from "../layout/Header";
 import CartPill from "./CartPill";
-import Stepper from "./Stepper";
-import ProductCatalog from "./ProductCatalog";
-import CartPanel from "./CartPanel";
-import AttendeeSection from "./AttendeeSection";
-import CheckoutDialog from "./CheckoutDialog";
-import SizeGuideDialog from "./SizeGuideDialog";
+import Stepper from "./3";
+import ProductCatalog from "./Catalog";
+import CartPanel from "./Order";
+import AttendeeSection from "./OrderForm";
+import CheckoutDialog from "./CheckBill";
+import SizeGuideDialog from "./Table-Size";
 import { useCart } from "../../hooks/useCart";
 import { orderUnits } from "../../lib/cart";
 import { baht } from "../../lib/format";
@@ -141,29 +141,6 @@ export default function ShopClient() {
             </svg>
             <span>ย้อนกลับ</span>
           </button>
-          {step === 1 && (
-            <p className={s.noteCard}>
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                aria-hidden="true"
-              >
-                <circle cx="12" cy="12" r="9" />
-                <path d="M12 8v5M12 16.5v.01" />
-              </svg>
-              <span>
-                <b>ซื้อเฉพาะของที่ระลึกได้ ไม่ต้องซื้อบัตร</b>{" "}
-                จะซื้อบัตรอย่างเดียว เสื้ออย่างเดียว
-                หรือซื้อทั้งสองอย่างในคำสั่งซื้อเดียวกันก็ได้
-              </span>
-            </p>
-          )}
         </section>
 
         {step === 1 ? (

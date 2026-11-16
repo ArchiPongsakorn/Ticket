@@ -15,8 +15,8 @@ const notoThai = Noto_Sans_Thai({
 });
 
 export const metadata = {
-  title: "งานเลี้ยงรุ่น CSI200",
-  description: "บัตรเข้างานและของที่ระลึก งานเลี้ยงรุ่น CSI200",
+  title: "งานเลี้ยงรุ่น CSI",
+  description: "บัตรเข้างานและของที่ระลึก งานเลี้ยงรุ่น CSI",
 };
 
 export const viewport = {
@@ -25,7 +25,11 @@ export const viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: { children: import("react").ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: import("react").ReactNode;
+}) {
   return (
     <html lang="th" className={`${kanit.variable} ${notoThai.variable}`}>
       <body>{children}</body>

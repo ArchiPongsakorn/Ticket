@@ -17,6 +17,7 @@ export async function register(payload: FormValues) {
 
 export async function createOrder(order: Record<string, unknown>) {
   await wait(700);
-  const orderNo = "MF" + String(Math.floor(Math.random() * 1e6)).padStart(6, "0");
+  const orderNo =
+    "MF" + String(Math.floor(Math.random() * 1e6)).padStart(6, "0");
   return { ok: true, orderNo };
 }
