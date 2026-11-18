@@ -233,36 +233,57 @@
   color: var(--text);
 }
 
+
+/* กลุ่มปุ่มจุดด้านล่าง Card */
 .dots {
   display: flex;
   justify-content: center;
   gap: 12px;
-  margin-top: 10px;
+  margin-top: 12px;
 }
+
+/* ปุ่มแต่ละจุด */
 .dot {
   width: 64px;
   height: 24px;
-  display: grid;
+  display: flex;
   align-items: center;
-  background: none;
-  border: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
   cursor: pointer;
 }
-.dot i {
-  position: relative;
+
+/* พื้นหลังแถบสีเทา */
+.dotTrack {
   display: block;
-  height: 3px;
-  border-radius: 3px;
-  background: var(--line);
+  width: 100%;
+  height: 4px;
+  background: #35445d;
+  border-radius: 99px;
   overflow: hidden;
 }
-.dot i::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--accent);
-  transform: scaleX(0);
-  transform-origin: left;
+
+/* แถบสีฟ้าที่กำลังวิ่ง */
+.dotFill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: #4da6ff;
+  border-radius: inherit;
+  transform-origin: left center;
+  animation: dotProgress 7s linear both;
+}
+
+/* Animation สีฟ้าจากซ้ายไปขวา */
+@keyframes dotProgress {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
 }
 
 
@@ -327,22 +348,64 @@
 }
 
 /* ===== Responsive & motion ===== */
+
 @media (max-width: 700px) {
   .viewport {
-    height: 340px;
+    height: 440px;
     border-radius: 22px;
   }
+
   .slide {
-    grid-template-columns: 1fr;
-    padding: 0 24px;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 8px;
+    padding: 22px 20px 16px;
   }
-  .art,
-  .arrow,
-  .decoTicket,
-  .decoStar {
-    display: none;
+
+  .copy {
+    justify-items: start;
+  }
+
+  /* แสดงรูปบัตรและเสื้อบนมือถือ */
+  .art {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    place-items: center;
+  }
+
+  /* จัดตำแหน่งรูปบัตร */
+  .item {
+    margin-top: 0;
+  }
+
+  /* ปรับขนาดรูปเสื้อ */
+  .plate {
+    width: clamp(130px, 38vw, 160px);
+  }
+
+  /* แสดงปุ่มเลื่อนบนมือถือ */
+  .arrow {
+    display: grid;
+    width: 36px;
+    height: 36px;
+    z-index: 5;
+    top: 50%;
+    translate: 0 -50%;
+  }
+
+  /* ปุ่มซ้าย */
+  .arrowPrev {
+    left: 6px;
+  }
+
+  /* ปุ่มขวา */
+  .arrowNext {
+    right: 6px;
   }
 }
+
 @media (prefers-reduced-motion: reduce) {
   .reveal,
   .lantern,
@@ -350,7 +413,9 @@
     animation: none;
   }
   .track {
-    transition: none;
+    display: flex;
+    height: 100%;
+    transition: transform 0.7s var(--ease);
   }
   .dot.isActive i::after {
     animation: none;

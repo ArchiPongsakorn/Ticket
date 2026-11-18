@@ -102,7 +102,6 @@ export default function HeroCarousel() {
         >
           <ChevronRight size={24} strokeWidth={2} />
         </button>
-
       </div>
 
       <div className={s.dots} role="tablist" aria-label="เลือกโฆษณา">
@@ -116,11 +115,11 @@ export default function HeroCarousel() {
             className={cx(s.dot, i === index && s.isActive)}
             onClick={() => goTo(i)}
           >
-            {/* เส้นเวลาเต็ม = เลื่อนไปสไลด์ถัดไป (key เปลี่ยนเพื่อรีสตาร์ทแอนิเมชัน) */}
-            <i
-              key={i === index ? cycle : "idle"}
-              onAnimationEnd={() => i === index && next()}
-            />
+            <span className={s.dotTrack}>
+              {i === index && (
+                <span key={`${slide.id}-${cycle}`} className={s.dotFill} />
+              )}
+            </span>
           </button>
         ))}
       </div>
