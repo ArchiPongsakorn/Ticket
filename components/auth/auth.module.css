@@ -324,3 +324,6 @@
     grid-template-columns: 1fr;
   }
 } */
+
+.formHint { color: var(--dim); font-size: 0.78rem; text-align: right; }
+.form button:disabled { cursor: progress; opacity: .7; }

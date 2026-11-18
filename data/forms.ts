@@ -3,7 +3,6 @@ import type {
   FormValues,
   OrderUnit,
   AuthMode,
-  AuthDone,
 } from "../types/domain";
 import * as v from "../lib/validators";
 
@@ -17,14 +16,6 @@ export const ATTENDEE_FIELDS: FieldDefinition[] = [
     label: "นามสกุล",
     type: "text",
     validate: v.minLen("นามสกุล"),
-  },
-  {
-    name: "phone",
-    label: "เบอร์โทร",
-    type: "tel",
-    inputMode: "numeric",
-    sanitize: phoneChars,
-    validate: v.phone,
   },
   {
     name: "email",
@@ -43,14 +34,6 @@ export const MERCH_FIELDS: FieldDefinition[] = [
     type: "text",
     full: true,
     validate: v.minLen("ชื่อ-นามสกุล"),
-  },
-  {
-    name: "phone",
-    label: "เบอร์โทร",
-    type: "tel",
-    inputMode: "numeric",
-    sanitize: phoneChars,
-    validate: v.phone,
   },
   { name: "email", label: "อีเมล", type: "email", validate: v.email },
   {
@@ -77,7 +60,6 @@ export const AUTH_FORMS: Record<
     submit: string;
     fields: FieldDefinition[];
     swap: { text: string; label: string; to: AuthMode };
-    done: AuthDone;
     terms?: boolean;
   }
 > = {
@@ -104,16 +86,11 @@ export const AUTH_FORMS: Record<
       },
     ],
     swap: { text: "ยังไม่มีบัญชี?", label: "สมัครสมาชิก", to: "register" },
-    done: {
-      title: "เข้าสู่ระบบสำเร็จ",
-      text: "พร้อมเลือกซื้อบัตรและของที่ระลึกแล้ว",
-    },
   },
   register: {
     title: "สร้างบัญชีใหม่",
-    sub: "ใช้เวลาไม่ถึง 1 นาที",
+    sub: "สมัครสมาชิกทั่วไป (User) และเก็บข้อมูลไว้ในเบราว์เซอร์เครื่องนี้",
     submit: "สมัครสมาชิก",
-    terms: true,
     fields: [
       {
         name: "username",
@@ -121,7 +98,6 @@ export const AUTH_FORMS: Record<
         type: "text",
         autoComplete: "username",
         placeholder: "เช่น username",
-        hint: "4-20 ตัว ใช้ตัวอักษรอังกฤษ ตัวเลข หรือ _",
         validate: v.username,
       },
       {
@@ -129,18 +105,8 @@ export const AUTH_FORMS: Record<
         label: "อีเมล",
         type: "email",
         autoComplete: "email",
-        placeholder: "name@email.com",
+        placeholder: "กรอกอีเมล",
         validate: v.email,
-      },
-      {
-        name: "phone",
-        label: "เบอร์โทร",
-        type: "tel",
-        autoComplete: "tel",
-        inputMode: "numeric",
-        placeholder: "0XXXXXXXXX",
-        sanitize: phoneChars,
-        validate: v.phone,
       },
       {
         name: "password",
@@ -148,8 +114,7 @@ export const AUTH_FORMS: Record<
         type: "password",
         autoComplete: "new-password",
         placeholder: "กรอกรหัสผ่าน",
-        hint: "อย่างน้อย 8 ตัว มีตัวอักษรและตัวเลข",
-        meter: true,
+        hint: "อย่างน้อย 4 ตัว ",
         validate: v.password,
       },
       {
@@ -157,14 +122,10 @@ export const AUTH_FORMS: Record<
         label: "ยืนยันรหัสผ่าน",
         type: "password",
         autoComplete: "new-password",
+        placeholder: "ยืนยันรหัสผ่าน",
         validate: v.confirmPassword,
       },
     ],
     swap: { text: "มีบัญชีอยู่แล้ว?", label: "เข้าสู่ระบบ", to: "login" },
-    done: {
-      title: "สมัครสมาชิกสำเร็จ"
-      ,text: ""
-      ,
-    },
   },
 };

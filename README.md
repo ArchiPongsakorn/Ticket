@@ -1,3 +1,5 @@
+> **ระบบ Login ใหม่:** คู่มือ LocalStorage Login 4 Role อยู่ที่ [README-LOCAL-AUTH-TH.md](./README-LOCAL-AUTH-TH.md) (สำหรับเดโมเท่านั้น)
+
 
 
 เว็บขายบัตรและของที่ระลึกงาน
@@ -87,10 +89,13 @@ src/
 
 ## เชื่อมระบบหลังบ้าน
 
-ตอนนี้ login, สมัครสมาชิก และสั่งซื้อเป็นตัวจำลอง ให้แก้ที่ `src/lib/api.js` ให้เรียก API จริง
+ระบบ Mock Authentication ถูกลบแล้ว หน้า `/login` (รวมแท็บสมัครสมาชิก) และ `components/layout/UserNav.tsx` ยังคงอยู่ แต่ยังไม่เชื่อมระบบสมาชิกจริง
 
-- `login(payload)` และ `register(payload)` ถูกเรียกจาก `components/auth/AuthForm.jsx`
-- `createOrder(order)` ถูกเรียกจาก `components/shop/CheckoutDialog.jsx` ได้รับรายการสินค้า ข้อมูลผู้เข้างานของบัตรแต่ละใบ ข้อมูลรับของ วิธีชำระเงิน และยอดรวม
+- `components/auth/AuthForm.tsx` ตรวจรูปแบบข้อมูลเท่านั้น เมื่อส่งฟอร์มจะแจ้งว่ายังไม่ได้เชื่อม Authentication API และจะ **ไม่** แสดงผลสำเร็จปลอม
+- `components/layout/UserNav.tsx` รับข้อมูลบัญชีผ่าน prop `user` และ callback `onLogout` จากระบบ Auth จริงในอนาคต ปัจจุบันจะแสดงลิงก์เข้าสู่ระบบ
+- หน้าซื้อ `/shop` ไม่มีการตรวจ session ฝั่ง browser ชั่วคราว จนกว่าจะเพิ่มระบบสิทธิ์ฝั่ง server
+- `/admin` ยังป้องกันด้วย HTTP Basic Authentication ที่ `proxy.ts` โดยต้องกำหนด `ADMIN_BASIC_USER` และ `ADMIN_BASIC_PASSWORD` ใน `.env.local` **ทั้งโหมด dev และ production**
+- `createOrder(order)` ใน `lib/api.ts` เป็นตัวจำลองการสั่งซื้อ (ไม่เกี่ยวกับ Auth) และยังต้องเปลี่ยนเป็น Backend จริง
 
 ## ข้อมูลที่เก็บในเครื่องผู้ใช้ (localStorage)
 

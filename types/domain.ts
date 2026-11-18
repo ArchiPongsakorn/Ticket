@@ -63,7 +63,6 @@ export type FieldDefinition = {
   meter?: boolean;
 };
 export type AuthMode = "login" | "register";
-export type AuthDone = { title: string; text: string };
 export interface CheckoutResult {
   no: string;
   tickets: number;

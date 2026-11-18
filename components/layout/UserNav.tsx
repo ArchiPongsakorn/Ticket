@@ -2,37 +2,26 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { demoLogout, getDemoSession, type DemoSession } from "@/lib/mock-auth";
+import { usePathname } from "next/navigation";
+import { House, ScrollText, SquareArrowRightEnter, Store, User } from "lucide-react";
 import s from "./UserNav.module.css";
-import { House } from "lucide-react";
-import { Store } from "lucide-react";
-import { ScrollText } from "lucide-react";
-import { SquareArrowRightEnter } from "lucide-react";
-import { User } from "lucide-react";
 
-/**
- * Profile on the customer navbar. It reads a minimal session model and can
- * later be connected to a real session API without changing Header.tsx.
- * IMPORTANT: browser-only demo sessions are not secure authentication.
- */
-export default function UserNav() {
-  const [session, setSession] = useState<DemoSession | null>(null);
+/** Account data shown in the site header. */
+export type UserNavAccount = {
+  username: string;
+  label?: string;
+};
+
+type UserNavProps = {
+  user?: UserNavAccount | null;
+  onLogout?: () => void;
+};
+
+/** Presentation-only navigation. Parent supplies the LocalStorage session. */
+export default function UserNav({ user = null, onLogout }: UserNavProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
-  const router = useRouter();
-
-  useEffect(() => {
-    const sync = () => setSession(getDemoSession());
-    sync();
-    window.addEventListener("storage", sync);
-    window.addEventListener("nextpro-session-change", sync);
-    return () => {
-      window.removeEventListener("storage", sync);
-      window.removeEventListener("nextpro-session-change", sync);
-    };
-  }, [pathname]);
 
   useEffect(() => setOpen(false), [pathname]);
 
@@ -52,8 +41,7 @@ export default function UserNav() {
     };
   }, [open]);
 
-  if (session?.role === "admin") return null;
-  if (session?.role !== "user") {
+  if (!user) {
     if (pathname === "/login") return null;
     return (
       <Link className="btn btn-ghost btn-sm" href="/login">
@@ -62,16 +50,9 @@ export default function UserNav() {
     );
   }
 
-  const username = session.username;
+  const username = user.username;
   const initial = username.trim().charAt(0).toUpperCase() || "U";
-
-  const logout = () => {
-    demoLogout();
-    setSession(null);
-    setOpen(false);
-    router.replace("/");
-    router.refresh();
-  };
+  const label = user.label ?? "สมาชิกทั่วไป";
 
   return (
     <div className={s.root} ref={rootRef}>
@@ -83,12 +64,10 @@ export default function UserNav() {
         aria-expanded={open}
         onClick={() => setOpen((old) => !old)}
       >
-        <span className={s.avatar} aria-hidden="true">
-          {initial}
-        </span>
+        <span className={s.avatar} aria-hidden="true">{initial}</span>
         <span className={s.identity}>
           <span className={s.name}>{username}</span>
-          <span className={s.role}>สมาชิกทั่วไป</span>
+          <span className={s.role}>{label}</span>
         </span>
         <svg
           className={`${s.chevron} ${open ? s.rotated : ""}`}
@@ -105,62 +84,48 @@ export default function UserNav() {
       {open && (
         <div className={s.menu} role="menu" aria-label="เมนูบัญชีผู้ใช้">
           <div className={s.menuAccount}>
-            <span className={s.largeAvatar} aria-hidden="true">
-              {initial}
-            </span>
+            <span className={s.largeAvatar} aria-hidden="true">{initial}</span>
             <div className={s.menuIdentity}>
               <strong>{username}</strong>
-              <span>สมาชิกทั่วไป</span>
+              <span>{label}</span>
             </div>
           </div>
 
-          {/* หน้าแรก */}
           <div className={s.divider} />
           <Link href="/" className={s.menuItem} onClick={() => setOpen(false)}>
             <House size={18} />
             <span>หน้าแรก</span>
           </Link>
-
-          {/* เลือกซื้อบัตร */}
-          <Link
-            href="/shop"
-            className={s.menuItem}
-            onClick={() => setOpen(false)}
-          >
+          <Link href="/shop" className={s.menuItem} onClick={() => setOpen(false)}>
             <Store size={18} />
             <span>เลือกซื้อบัตร</span>
           </Link>
-
-          {/* คำสั่งซื้อ */}
-          <Link
-            href="/my-orders"
-            className={s.menuItem}
-            onClick={() => setOpen(false)}
-          >
+          <Link href="/my-orders" className={s.menuItem} onClick={() => setOpen(false)}>
             <ScrollText size={18} />
             <span>คำสั่งซื้อของฉัน</span>
           </Link>
-
-          {/* โปรไฟล์ */}
-          <Link
-            href="/profile"
-            className={s.menuItem}
-            onClick={() => setOpen(false)}
-          >
+          <Link href="/profile" className={s.menuItem} onClick={() => setOpen(false)}>
             <User size={18} />
             <span>ข้อมูลส่วนตัว</span>
           </Link>
 
-          <div className={s.divider} />
-          <button
-            className={`${s.menuItem} ${s.logout}`}
-            role="menuitem"
-            type="button"
-            onClick={logout}
-          >
-            <SquareArrowRightEnter size={18} />
-            <span>ออกจากระบบ</span>
-          </button>
+          {onLogout && (
+            <>
+              <div className={s.divider} />
+              <button
+                className={`${s.menuItem} ${s.logout}`}
+                role="menuitem"
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  onLogout();
+                }}
+              >
+                <SquareArrowRightEnter size={18} />
+                <span>ออกจากระบบ</span>
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>

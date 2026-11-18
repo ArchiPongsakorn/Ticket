@@ -9,7 +9,8 @@
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "verify": "node scripts/verify-merge.mjs",
-    "check:domain": "tsc -p tsconfig.domain.json"
+    "check:domain": "tsc -p tsconfig.domain.json",
+    "auth:create": "node scripts/create-role-account.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

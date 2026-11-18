@@ -29,12 +29,12 @@ export const identifier = (v: string) => {
   if (!x) return "กรุณากรอกชื่อผู้ใช้ อีเมล หรือเบอร์โทร";
   if (x.includes("@")) return email(x);
   return /^\d+$/.test(x) ? phone(x) : username(x);
-};
+}
 
 export const password = (v: string) =>
-  v.length >= 8 && /[A-Za-z\u0E00-\u0E7F]/.test(v) && /\d/.test(v)
+  v.length >= 4
     ? ""
-    : "อย่างน้อย 8 ตัว มีตัวอักษรและตัวเลข";
+    : "รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร";
 
 export const confirmPassword = (v: string, values: FormValues) =>
   v && v === values.password ? "" : "รหัสผ่านไม่ตรงกัน";

@@ -1,11 +1,13 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { cx } from "../../lib/cx";
 import s from "./header.module.css";
 import UserNav from "./UserNav";
 import ShopLink from "@/components/auth/ShopLink";
+import { AUTH_CHANGE_EVENT, getCurrentUser, logoutLocalUser, ROLE_LABELS, type AuthUser } from "@/lib/local-auth";
 
 const LINKS = [
   { id: "home", href: "/", label: "หน้าแรก" },
@@ -23,6 +25,20 @@ export default function Header({
 }: HeaderProps) {
   // ตรวจสอบว่าอยู่หน้า URL ไหน
   const pathname = usePathname();
+  const [signedInUser, setSignedInUser] = useState<AuthUser | null>(null);
+
+  useEffect(() => {
+    const sync = () => setSignedInUser(getCurrentUser());
+    sync();
+    window.addEventListener(AUTH_CHANGE_EVENT, sync);
+    window.addEventListener("storage", sync);
+    window.addEventListener("pageshow", sync);
+    return () => {
+      window.removeEventListener(AUTH_CHANGE_EVENT, sync);
+      window.removeEventListener("storage", sync);
+      window.removeEventListener("pageshow", sync);
+    };
+  }, []);
 
   // ตรวจสอบว่าเป็นหน้า Login หรือ Register หรือไม่
   const isAuthPage =
@@ -84,7 +100,7 @@ export default function Header({
         {!isAuthPage && children}
 
         {/* โปรไฟล์ User ซ่อนในหน้า Login */}
-        {!isAuthPage && <UserNav />}
+        {!isAuthPage && <UserNav user={signedInUser ? { username: signedInUser.username, label: ROLE_LABELS[signedInUser.role] } : null} onLogout={logoutLocalUser} />}
 
       </div>
     </header>

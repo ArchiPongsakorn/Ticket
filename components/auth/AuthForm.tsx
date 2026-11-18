@@ -1,93 +1,136 @@
 "use client";
+
 import type { FormEvent } from "react";
 import type {
   AuthMode,
-  AuthDone,
   FormValues,
   FieldErrors,
   FieldDefinition,
 } from "../../types/domain";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { demoLogin } from "@/lib/mock-auth";
-import Link from "next/link";
 import Field from "../ui/Field";
-import PasswordMeter from "./PasswordMeter";
 import { AUTH_FORMS } from "../../data/forms";
 import { validateFields } from "../../lib/validators";
-import { register } from "../../lib/api";
-import { cx } from "../../lib/cx";
+import { loginLocalUser, registerLocalUser } from "@/lib/local-auth";
 import s from "./auth.module.css";
 
-/**
- * ฟอร์มเดียวใช้ได้ทั้งเข้าสู่ระบบและสมัครสมาชิก
- * หน้าตาและกติกาตรวจข้อมูลมาจาก AUTH_FORMS ใน src/data/forms.js
- */
 export default function AuthForm({
   mode,
   onSwitch,
-  onSuccess,
 }: {
   mode: AuthMode;
   onSwitch: (mode: AuthMode) => void;
-  onSuccess: (done: AuthDone) => void;
 }) {
-  const cfg = AUTH_FORMS[mode];
   const router = useRouter();
-  const [loginError, setLoginError] = useState("");
+  const cfg = AUTH_FORMS[mode];
+
   const [values, setValues] = useState<FormValues>({});
   const [errors, setErrors] = useState<FieldErrors>({});
-  const [accepted, setAccepted] = useState(false);
-  const [termsError, setTermsError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [remember, setRemember] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
   const idOf = (name: string) => `${mode}-${name}`;
 
   const change = (field: FieldDefinition, raw: string) => {
     const value = field.sanitize ? field.sanitize(raw) : raw;
+
     const next = { ...values, [field.name]: value };
+
     setValues(next);
-    if (errors[field.name])
-      setErrors((e) => ({ ...e, [field.name]: field.validate(value, next) }));
+    setSubmitError("");
+
+    if (errors[field.name]) {
+      setErrors((previous) => ({
+        ...previous,
+        [field.name]: field.validate(value, next),
+      }));
+    }
   };
 
   const blur = (field: FieldDefinition) => {
-    if (values[field.name])
-      setErrors((e) => ({
-        ...e,
-        [field.name]: field.validate(values[field.name], values),
+    const value = values[field.name] ?? "";
+
+    if (value) {
+      setErrors((previous) => ({
+        ...previous,
+        [field.name]: field.validate(value, values),
       }));
+    }
   };
 
-  async function submit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  // ==============================
+  // LOGIN / REGISTER
+  // ==============================
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (submitting) return;
+
     const found = validateFields(cfg.fields, values);
-    const termsMsg =
-      cfg.terms && !accepted ? "กรุณายอมรับเงื่อนไขก่อนสมัครสมาชิก" : "";
+
     setErrors(found);
-    setTermsError(termsMsg);
+    setSubmitError("");
 
-    const firstBad = cfg.fields.find((f) => found[f.name]);
-    if (firstBad) return document.getElementById(idOf(firstBad.name))?.focus();
-    if (termsMsg) return document.getElementById(idOf("terms"))?.focus();
+    const firstBad = cfg.fields.find((field) => found[field.name]);
 
-    if (mode === "login") {
-      setLoading(true);
-      setLoginError("");
-      const session = demoLogin(values.id ?? "", values.password ?? "");
-      setLoading(false);
-      if (!session) {
-        setLoginError(
-          "บัญชีตัวอย่างหรือรหัสผ่านไม่ถูกต้อง (ดูข้อมูล Demo ด้านล่าง)",
-        );
-        return;
-      }
-      router.replace(session.role === "admin" ? "/admin" : "/");
-      router.refresh();
+    if (firstBad) {
+      document.getElementById(idOf(firstBad.name))?.focus();
+      return;
     }
-    setLoading(true);
-    await register(values);
-    setLoading(false);
-    onSuccess(cfg.done);
+
+    setSubmitting(true);
+
+    try {
+      let user;
+
+      if (mode === "register") {
+        // สมัครสมาชิกใหม่เป็น User เท่านั้น
+        user = await registerLocalUser({
+          username: values.username ?? "",
+          email: values.email ?? "",
+          password: values.password ?? "",
+        });
+      } else {
+        // Login ได้ทุก Role
+        user = await loginLocalUser(
+          values.id ?? "",
+          values.password ?? "",
+          remember,
+        );
+      }
+
+      // ตรวจสอบหน้าที่ต้องกลับไปหลัง Login
+      const returnTo = window.sessionStorage.getItem("ticket:returnTo");
+
+      window.sessionStorage.removeItem("ticket:returnTo");
+
+      // ==============================
+      // ROLE REDIRECT
+      // ==============================
+
+      if (
+        user.role === "admin" ||
+        user.role === "staff" ||
+        user.role === "merchant"
+      ) {
+        router.replace("/admin");
+      } else if (returnTo === "/shop") {
+        router.replace("/shop");
+      } else {
+        router.replace("/");
+      }
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error
+          ? error.message
+          : "ไม่สามารถดำเนินการได้ กรุณาลองอีกครั้ง",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -96,75 +139,51 @@ export default function AuthForm({
 
       <p className={s.formSub}>{cfg.sub}</p>
 
-      {cfg.fields.map((f) => (
+      {cfg.fields.map((field) => (
         <Field
-          key={f.name}
-          id={idOf(f.name)}
-          label={f.label}
-          type={f.type}
-          hint={f.hint}
-          value={values[f.name] ?? ""}
-          error={errors[f.name]}
-          onChange={(v) => change(f, v)}
-          onBlur={() => blur(f)}
-          autoComplete={f.autoComplete}
-          inputMode={f.inputMode}
-          placeholder={f.placeholder}
-        >
-          {f.meter && <PasswordMeter value={values.password ?? ""} />}
-        </Field>
+          key={field.name}
+          id={idOf(field.name)}
+          label={field.label}
+          type={field.type}
+          hint={field.hint}
+          value={values[field.name] ?? ""}
+          error={errors[field.name]}
+          onChange={(value) => change(field, value)}
+          onBlur={() => blur(field)}
+          autoComplete={field.autoComplete}
+          inputMode={field.inputMode}
+          placeholder={field.placeholder}
+        />
       ))}
 
+      {/* Remember Me */}
       {mode === "login" && (
         <div className={s.row}>
           <label className={s.check}>
-            <input type="checkbox" name="remember" /> จดจำฉันไว้
-          </label>
-          <Link className={s.link} href="/login">
-            ลืมรหัสผ่าน?
-          </Link>
-        </div>
-      )}
-
-      {cfg.terms && (
-        <div>
-          <label className={s.check}>
             <input
-              id={idOf("terms")}
               type="checkbox"
-              checked={accepted}
-              onChange={(e) => {
-                setAccepted(e.target.checked);
-                setTermsError("");
-              }}
-            />
-            <span>
-              ฉันยอมรับ{" "}
-              <Link className={s.link} href="/login">
-                เงื่อนไขการใช้งาน
-              </Link>{" "}
-              และ{" "}
-              <Link className={s.link} href="/login">
-                นโยบายความเป็นส่วนตัว
-              </Link>
-            </span>
+              name="remember"
+              checked={remember}
+              onChange={(event) => setRemember(event.target.checked)}
+            />{" "}
+            จดจำฉันไว้
           </label>
-          {termsError && <p className={s.termsError}>{termsError}</p>}
         </div>
       )}
 
-      {loginError && (
+      {/* Error Message */}
+      {submitError && (
         <p role="alert" className={s.termsError}>
-          {loginError}
+          {submitError}
         </p>
       )}
-      <button
-        type="submit"
-        className={cx("btn", loading && s.loading)}
-        disabled={loading}
-      >
-        {cfg.submit}
+
+      {/* Submit Button */}
+      <button type="submit" className="btn" disabled={submitting}>
+        {submitting ? "กำลังดำเนินการ..." : cfg.submit}
       </button>
+
+      {/* Switch Login / Register */}
       <p className={s.swap}>
         {cfg.swap.text}{" "}
         <button type="button" onClick={() => onSwitch(cfg.swap.to)}>
