@@ -120,14 +120,23 @@ export default function Home() {
     content = <AuditLogContent />;
   } else if (currentPage === "report") {
     content = <ReportContent />;
-  } else if (currentPage === "stores") {
+  } else if (["stores", "Shop"].includes(currentPage)) {
     content = <StoreManagementContent />;
   } else if (currentPage === "users") {
     content = <UserManagementContent />;
-  } else if (currentPage === "pricing") {
+  } else if (["pricing", "PriceAdmin"].includes(currentPage)) {
     content = <PricingContent />;
   } else if (
-    ["Token", "scan-qr", "shop", "scan-qr-shop"].includes(currentPage)
+    [
+      "Token",
+      "Admintoken",
+      "scan-qr",
+      "qrevent",
+      "shop",
+      "Merchant",
+      "scan-qr-shop",
+      "qrmerchant",
+    ].includes(currentPage)
   ) {
     const section:
       | "topup"
@@ -136,13 +145,13 @@ export default function Home() {
       | "pos"
       | "store"
       | "shop-scan" =
-      currentPage === "Token"
+      currentPage === "Token" || currentPage === "Admintoken"
         ? "topup"
-        : currentPage === "scan-qr"
+        : currentPage === "scan-qr" || currentPage === "qrevent"
           ? "checkin"
-          : currentPage === "shop"
+          : currentPage === "shop" || currentPage === "Merchant"
             ? "store"
-            : currentPage === "scan-qr-shop"
+            : currentPage === "scan-qr-shop" || currentPage === "qrmerchant"
               ? "shop-scan"
               : "pos";
 
