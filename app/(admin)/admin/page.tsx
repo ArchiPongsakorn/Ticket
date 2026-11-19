@@ -9,6 +9,7 @@ import AuditLogContent from "@/components/admin/audit-log-content";
 import CheckSlipContent from "@/components/admin/check-slip-content";
 import DashboardContent from "@/components/admin/dashboard-content";
 import EventTokenManagementSystem from "./event-tokens/page";
+import PricingContent from "@/components/admin/pricing-content";
 import ReportContent from "@/components/admin/report-content";
 import StoreManagementContent from "@/components/admin/store-management-content";
 import UserManagementContent from "@/components/admin/user-management-content";
@@ -123,10 +124,10 @@ export default function Home() {
     content = <StoreManagementContent />;
   } else if (currentPage === "users") {
     content = <UserManagementContent />;
+  } else if (currentPage === "pricing") {
+    content = <PricingContent />;
   } else if (
-    ["Token", "scan-qr", "pricing", "shop", "scan-qr-shop"].includes(
-      currentPage,
-    )
+    ["Token", "scan-qr", "shop", "scan-qr-shop"].includes(currentPage)
   ) {
     const section:
       | "topup"
@@ -139,13 +140,11 @@ export default function Home() {
         ? "topup"
         : currentPage === "scan-qr"
           ? "checkin"
-          : currentPage === "pricing"
-            ? "products"
-            : currentPage === "shop"
-              ? "store"
-              : currentPage === "scan-qr-shop"
-                ? "shop-scan"
-                : "pos";
+          : currentPage === "shop"
+            ? "store"
+            : currentPage === "scan-qr-shop"
+              ? "shop-scan"
+              : "pos";
 
     content = <EventTokenManagementSystem section={section} />;
   }
@@ -159,11 +158,7 @@ export default function Home() {
     role === "admin" ? "Admin" : role === "staff" ? "Staff" : "Merchant";
 
   const roleDescription =
-    role === "admin"
-      ? "ผู้ดูแลระบบ"
-      : role === "staff"
-        ? "เจ้าหน้าที่"
-        : "ร้านค้า";
+    role === "admin" ? "ผู้ดูแลระบบ" : role === "staff" ? "เจ้าหน้าที่" : "ร้านค้า";
 
   return (
     <SidebarProvider

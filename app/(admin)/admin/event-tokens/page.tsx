@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import CheckInScanSection from "@/components/admin/event-tokens/check-in-scan-section";
 import MockQrCode from "@/components/admin/event-tokens/mock-qr-code";
 import TopUpTokenSection from "@/components/admin/event-tokens/top-up-token-section";
+import PricingContent from "@/components/admin/pricing-content";
 import type {
   ActivityLog,
   Attendee,
@@ -47,13 +48,10 @@ const INITIAL_PRODUCTS = [
 type Product = (typeof INITIAL_PRODUCTS)[number];
 type AddLog = (message: string, type?: string) => void;
 
-type ProductSectionProps = {
+type StoreDashboardProps = {
   products: Product[];
   setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
   addLog: AddLog;
-};
-
-type StoreDashboardProps = ProductSectionProps & {
   logs: ActivityLog[];
 };
 
@@ -101,7 +99,7 @@ export default function EventTokenManagementSystem({
 
   return (
     <div
-      className={`${section === "checkin" ? "h-svh overflow-hidden p-3" : "min-h-screen p-4 md:p-8"} bg-[#0f2038] font-sans text-[#d6e0ed]`}
+      className={`${section === "checkin" ? "h-svh overflow-hidden p-3" : "min-h-screen p-4 md:p-8"} bg-[#0a1628] font-sans text-[#d6e0ed]`}
     >
       <div className={section === "checkin" ? "h-full w-full" : "w-full"}>
         {/* Header & Navigation */}
@@ -154,10 +152,7 @@ export default function EventTokenManagementSystem({
               />
             )}
             {visibleTab === "products" && (
-              <ProductPricingSection
-                products={products}
-                setProducts={setProducts}
-                addLog={addLog}
+              <PricingContent
               />
             )}
             {visibleTab === "pos" && (
@@ -428,125 +423,6 @@ function StoreTokenScanSection({
             </p>
           </div>
         )}
-      </div>
-    </div>
-  );
-}
-
-// ==========================================
-// 3. หน้าตั้งราคาสินค้า (ProductPricingSection)
-// ==========================================
-function ProductPricingSection({
-  products,
-  setProducts,
-  addLog,
-}: ProductSectionProps) {
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState("");
-  const [stock] = useState(50);
-
-  const handleAddProduct = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!name.trim() || Number(price) <= 0) return;
-
-    const newProduct = {
-      id: `PRD-0${products.length + 1}`,
-      name: name.trim(),
-      price: Number(price),
-      stock: Number(stock),
-    };
-    setProducts((prev) => [...prev, newProduct]);
-    addLog(`เพิ่มสินค้าใหม่: ${newProduct.name} (${newProduct.price} Token)`);
-    setName("");
-    setPrice("");
-  };
-
-  const handleUpdatePrice = (id: string, newPrice: string) => {
-    const val = Number(newPrice);
-    if (val < 0) return;
-    setProducts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, price: val } : p)),
-    );
-  };
-
-  return (
-    <div className="bg-[#10233d] p-6 rounded-2xl shadow-sm border border-[#244466]">
-      <h2 className="text-xl font-bold mb-1">
-        ตั้งราคาสินค้า & จัดการเมนูร้านค้า
-      </h2>
-      <p className="text-sm text-[#8fa6c2] mb-6">
-        เพิ่มรายการสินค้าและกำหนดราคาเป็นหน่วย Token
-      </p>
-
-      {/* ฟอร์มเพิ่มสินค้าใหม่ */}
-      <form
-        onSubmit={handleAddProduct}
-        className="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-6 p-4 bg-[#0f2038] rounded-xl border border-[#244466]"
-      >
-        <input
-          type="text"
-          placeholder="ชื่อสินค้า"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="sm:col-span-2 px-3 py-2 border border-[#355779] rounded-lg bg-[#10233d] text-sm"
-          required
-        />
-        <input
-          type="number"
-          placeholder="ราคา (Token)"
-          min="1"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          className="px-3 py-2 border border-[#355779] rounded-lg bg-[#10233d] text-sm"
-          required
-        />
-        <button
-          type="submit"
-          className="py-2 px-4 bg-[#49a5fb] hover:bg-[#368fdf] text-white text-sm font-semibold rounded-lg"
-        >
-          + เพิ่มสินค้า
-        </button>
-      </form>
-
-      {/* ตารางแก้ไขราคาสินค้า */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b border-[#244466] text-xs text-[#8fa6c2] uppercase">
-              <th className="py-3 px-2">รหัส</th>
-              <th className="py-3 px-2">ชื่อสินค้า</th>
-              <th className="py-3 px-2">ราคา (Token)</th>
-              <th className="py-3 px-2 text-right">สต็อก</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#244466] text-sm">
-            {products.map((product) => (
-              <tr key={product.id}>
-                <td className="py-3 px-2 font-mono text-xs text-[#8fa6c2]">
-                  {product.id}
-                </td>
-                <td className="py-3 px-2 font-medium">{product.name}</td>
-                <td className="py-3 px-2">
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      type="number"
-                      min="0"
-                      value={product.price}
-                      onChange={(e) =>
-                        handleUpdatePrice(product.id, e.target.value)
-                      }
-                      className="w-24 px-2.5 py-1 border border-[#355779] rounded-lg font-semibold text-[#49a5fb]"
-                    />
-                    <span className="text-xs text-[#7188a5]">TK</span>
-                  </div>
-                </td>
-                <td className="py-3 px-2 text-right text-[#d6e0ed]">
-                  {product.stock} ชิ้น
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
       </div>
     </div>
   );

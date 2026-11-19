@@ -11,13 +11,13 @@ import {
 } from "@/components/admin/tailgrids/core/table";
 
 const totalStoreSales = dashboardData.storeSales.reduce(
-  (total, store) => total + Number(store.Sale),
+  (total, store) => total + store.Sale,
   0,
 );
 
 const totalProductSales = dashboardData.orders.reduce(
   (total, order) =>
-    total + Number(order["price-ticket"]) + Number(order["price-shirt"]),
+    total + order.priceTicket + order.priceShirt,
   0,
 );
 
@@ -64,7 +64,7 @@ export default function ReportContent() {
 
         <section className="mt-5 overflow-hidden rounded-2xl border border-[#244466] bg-[#10233d] p-3 sm:p-4">
           <div className="overflow-x-auto">
-            <TableRoot className="w-full min-w-[620px] border-[#244466] text-left text-sm">
+            <TableRoot className="w-full min-w-155 border-[#244466] text-left text-sm">
               <TableHeader>
                 <TableRow className="border-b border-[#244466] text-[#8fa6c2]">
                   <TableHead className="px-2 pb-3 font-normal">ร้านค้า</TableHead>
@@ -83,7 +83,7 @@ export default function ReportContent() {
                       {store.name}
                     </TableCell>
                     <TableCell className="px-2 py-3 text-[#d6e0ed]">
-                      {(Number(store.Sale))}
+                      {store.Sale}
                     </TableCell>
                     <TableCell className="px-2 py-3 text-[#8fa6c2]">
                       {store.progress}%
