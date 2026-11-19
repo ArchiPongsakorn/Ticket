@@ -13,10 +13,10 @@ export const menuItems = [
   { id: "Admintoken", label: "เติม Token" },
   { id: "qrevent", label: "สแกน QR CODE เข้างาน" },
   { id: "PriceAdmin", label: "ตั้งราคา" },
-  { id: "stores", label: "จัดการร้านค้า" },
+  { id: "Shop", label: "จัดการร้านค้า" },
   { id: "report", label: "Report" },
   { id: "audit-log", label: "Audit Log" },
-  { id: "Shop", label: "ร้านค้า" },
+  { id: "Merchant", label: "ร้านค้า" },
   { id: "qrmerchant", label: "สแกน QR TOKEN ร้านค้า" },
 ];
 
