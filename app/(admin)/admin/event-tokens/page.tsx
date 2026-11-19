@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import dashboardData from "@/data/admin/dashboard.json";
 import CheckInScanSection from "@/components/admin/event-tokens/check-in-scan-section";
 import MockQrCode from "@/components/admin/event-tokens/mock-qr-code";
 import TopUpTokenSection from "@/components/admin/event-tokens/top-up-token-section";
@@ -9,6 +10,7 @@ import type {
   ActivityLog,
   Attendee,
 } from "@/components/admin/event-tokens/types";
+import { getCurrentUser } from "@/lib/local-auth";
 
 // ==========================================
 // ข้อมูลจำลอง (Mock Data) สำหรับทดสอบระบบ
@@ -49,8 +51,6 @@ type Product = (typeof INITIAL_PRODUCTS)[number];
 type AddLog = (message: string, type?: string) => void;
 
 type StoreDashboardProps = {
-  products: Product[];
-  setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
   addLog: AddLog;
   logs: ActivityLog[];
 };
@@ -165,8 +165,6 @@ export default function EventTokenManagementSystem({
             )}
             {visibleTab === "store" && (
               <StoreDashboardSection
-                products={products}
-                setProducts={setProducts}
                 logs={logs}
                 addLog={addLog}
               />
@@ -186,11 +184,15 @@ export default function EventTokenManagementSystem({
 }
 
 function StoreDashboardSection({
-  products,
-  setProducts,
   logs,
   addLog,
 }: StoreDashboardProps) {
+  const currentUser = getCurrentUser();
+  const store =
+    dashboardData.storeSales.find(
+      (item) => item.adminEmail === currentUser?.email,
+    ) ?? dashboardData.storeSales[0];
+  const [storeProduct, setStoreProduct] = useState(store.product);
   const sales = logs.filter((log) => log.message.startsWith("ชำระเงินสำเร็จ"));
   const totalSales = sales.reduce((total, log) => {
     const amount = log.message.match(/จ่าย (\d+) Token/);
@@ -201,77 +203,66 @@ function StoreDashboardSection({
     <div className="w-full space-y-4">
       <header>
         <p className="text-xs font-semibold text-[#b18cff]">Admin ร้านค้า</p>
-        <h2 className="mt-1 text-2xl font-bold text-white">ร้านค้า แจ่มใส</h2>
+        <h2 className="mt-1 text-2xl font-bold text-white">{store.name}</h2>
       </header>
 
       <section className="grid gap-3 sm:grid-cols-3 xl:max-w-5xl">
         <div className="rounded-xl border border-[#244466] bg-[#10233d] p-4">
           <p className="text-xs text-[#8fa6c2]">ยอดขายรวม (Token)</p>
           <p className="mt-2 text-2xl font-bold text-[#b18cff]">
-            {(1000 + totalSales).toLocaleString()}
+            {(store.Sale + totalSales).toLocaleString()}
           </p>
         </div>
         <div className="rounded-xl border border-[#244466] bg-[#10233d] p-4">
           <p className="text-xs text-[#8fa6c2]">จำนวนรายการขาย</p>
           <p className="mt-2 text-2xl font-bold text-[#49a5fb]">
-            {50 + sales.length}
+            {store.salesCount + sales.length}
           </p>
         </div>
         <div className="rounded-xl border border-[#244466] bg-[#10233d] p-4">
           <p className="text-xs text-[#8fa6c2]">สินค้าขายดี</p>
           <p className="mt-2 text-xl font-bold text-[#22d3b4]">
-            {products[0]?.name ?? "ยังไม่มีสินค้า"}
+            {storeProduct.name}
           </p>
         </div>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(280px,0.9fr)]">
+      <section className="grid items-start gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(280px,0.9fr)]">
         <div className="rounded-2xl border border-[#244466] bg-[#10233d] p-4">
           <h3 className="mb-3 text-sm font-bold text-white">สินค้าของคุณ</h3>
           <div className="divide-y divide-[#244466]">
-            {products.map((product) => (
-              <div
-                key={product.id}
-                className="grid grid-cols-[minmax(0,1fr)_84px_68px] items-center gap-3 py-2.5 first:pt-0 last:pb-0"
+            <div className="grid grid-cols-[minmax(0,1fr)_84px_68px] items-center gap-3 py-2.5">
+              <span className="truncate text-sm text-[#d6e0ed]">
+                {storeProduct.name}
+              </span>
+              <label className="sr-only" htmlFor={`store-price-${store.id}`}>
+                ราคาของ {storeProduct.name}
+              </label>
+              <input
+                id={`store-price-${store.id}`}
+                type="number"
+                min="0"
+                value={storeProduct.price}
+                onChange={(event) =>
+                  setStoreProduct((currentProduct) => ({
+                    ...currentProduct,
+                    price: Number(event.target.value),
+                  }))
+                }
+                className="w-full rounded-md border border-[#244466] bg-[#0a1628] px-2 py-1.5 text-xs text-white outline-none focus:border-[#49a5fb]"
+              />
+              <button
+                type="button"
+                onClick={() =>
+                  addLog(
+                    `อัปเดตราคาสินค้า ${storeProduct.name}: ${storeProduct.price} Token`,
+                  )
+                }
+                className="rounded-md bg-[#49a5fb] px-2 py-1.5 text-xs font-bold text-[#071426] hover:bg-[#368fdf]"
               >
-                <span className="truncate text-sm text-[#d6e0ed]">
-                  {product.name}
-                </span>
-                <label
-                  className="sr-only"
-                  htmlFor={`store-price-${product.id}`}
-                >
-                  ราคาของ {product.name}
-                </label>
-                <input
-                  id={`store-price-${product.id}`}
-                  type="number"
-                  min="0"
-                  value={product.price}
-                  onChange={(event) =>
-                    setProducts((previous) =>
-                      previous.map((item) =>
-                        item.id === product.id
-                          ? { ...item, price: Number(event.target.value) }
-                          : item,
-                      ),
-                    )
-                  }
-                  className="w-full rounded-md border border-[#244466] bg-[#0a1628] px-2 py-1.5 text-xs text-white outline-none focus:border-[#49a5fb]"
-                />
-                <button
-                  type="button"
-                  onClick={() =>
-                    addLog(
-                      `อัปเดตราคาสินค้า ${product.name}: ${product.price} Token`,
-                    )
-                  }
-                  className="rounded-md bg-[#49a5fb] px-2 py-1.5 text-xs font-bold text-[#071426] hover:bg-[#368fdf]"
-                >
-                  บันทึก
-                </button>
-              </div>
-            ))}
+                บันทึก
+              </button>
+            </div>
           </div>
         </div>
 
@@ -286,12 +277,12 @@ function StoreDashboardSection({
                   >
                     <div>
                       <p className="text-xs text-[#d6e0ed]">
-                        {products[0]?.name ?? "สินค้า"}
+                        {storeProduct.name}
                       </p>
                       <p className="mt-1 text-[10px] text-[#7188a5]">{time}</p>
                     </div>
                     <span className="text-xs font-bold text-[#b18cff]">
-                      200
+                      {storeProduct.price}
                     </span>
                   </div>
                 ))
@@ -326,6 +317,11 @@ function StoreTokenScanSection({
   setAttendees,
   addLog,
 }: AttendeeSectionProps) {
+  const currentUser = getCurrentUser();
+  const store =
+    dashboardData.storeSales.find(
+      (item) => item.adminEmail === currentUser?.email,
+    ) ?? dashboardData.storeSales[0];
   const [customerQr, setCustomerQr] = useState("");
   const [result, setResult] = useState<ScanResult | null>(null);
   const chargeAmount = 50;
@@ -406,7 +402,7 @@ function StoreTokenScanSection({
                 : "× สแกนไม่สำเร็จ"}
             </p>
             <p className="mt-2 text-sm font-semibold text-white">
-              ร้านค้า แจ่มใส
+              {store.name}
             </p>
             <p className="mt-2 text-xs text-[#8fa6c2]">{result.message}</p>
           </div>
@@ -416,7 +412,7 @@ function StoreTokenScanSection({
               ✓ พร้อมรับการชำระเงิน
             </p>
             <p className="mt-2 text-sm font-semibold text-white">
-              ร้านค้า แจ่มใส
+              {store.name}
             </p>
             <p className="mt-2 text-xs text-[#8fa6c2]">
               สแกน QR ลูกค้าเพื่อรับ 50 Token
