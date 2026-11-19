@@ -64,10 +64,7 @@ export default function DashboardContent() {
                       </td>
                       <td className="px-2 py-2 text-[#8fa6c2]">{order.item}</td>
                       <td className="px-2 py-2 text-right font-semibold text-white">
-                        {(
-                          Number(order["price-ticket"]) +
-                          Number(order["price-shirt"])
-                        )}
+                        {order.priceTicket + order.priceShirt}
                       </td>
                     </tr>
                   ))}
@@ -87,7 +84,7 @@ export default function DashboardContent() {
                   <div className="mb-2 flex items-center justify-between text-base leading-6">
                     <span className="text-[#d6e0ed]">{store.name}</span>
                     <span className="tabular-nums text-[#8fa6c2]">
-                      {Number(store["Sale"])}
+                      {store.Sale}
                     </span>
                   </div>
                   

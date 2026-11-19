@@ -16,8 +16,7 @@ const totalStoreSales = dashboardData.storeSales.reduce(
 );
 
 const totalProductSales = dashboardData.orders.reduce(
-  (total, order) =>
-    total + Number(order["price-ticket"]) + Number(order["price-shirt"]),
+  (total, order) => total + order.priceTicket + order.priceShirt,
   0,
 );
 
