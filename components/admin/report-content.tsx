@@ -64,7 +64,7 @@ export default function ReportContent() {
 
         <section className="mt-5 overflow-hidden rounded-2xl border border-[#244466] bg-[#10233d] p-3 sm:p-4">
           <div className="overflow-x-auto">
-            <TableRoot className="w-full min-w-[620px] border-[#244466] text-left text-sm">
+            <TableRoot className="w-full min-w-155 border-[#244466] text-left text-sm">
               <TableHeader>
                 <TableRow className="border-b border-[#244466] text-[#8fa6c2]">
                   <TableHead className="px-2 pb-3 font-normal">ร้านค้า</TableHead>
