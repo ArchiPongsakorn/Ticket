@@ -1,4 +1,3 @@
-
 import { ROLE_ACCOUNTS } from "@/data/role-accounts";
 
 export type AuthRole = "user" | "admin" | "staff" | "merchant";
@@ -7,7 +6,6 @@ export type AuthUser = {
   id: string;
   username: string;
   email: string;
-  phone: string;
   role: AuthRole;
 };
 
@@ -40,19 +38,16 @@ function getAccounts(): Account[] {
           typeof item.id === "string" &&
           typeof item.username === "string" &&
           typeof item.email === "string" &&
-          typeof item.password === "string"
+          typeof item.password === "string",
       );
     }
   } catch {
     users = [];
   }
 
-  const specialAccounts: Account[] = ROLE_ACCOUNTS.map(
-    (account) => ({
-      ...account,
-      phone: "",
-    })
-  );
+  const specialAccounts: Account[] = ROLE_ACCOUNTS.map((account) => ({
+    ...account,
+  }));
 
   return [...users, ...specialAccounts];
 }
@@ -60,16 +55,20 @@ function getAccounts(): Account[] {
 function notifyChange() {
   window.dispatchEvent(new Event(AUTH_CHANGE_EVENT));
 }
-
+//5.1 SAVESESSION
+//สร้าง รับค่า ID 
 function saveSession(userId: string, remember: boolean) {
   localStorage.removeItem(SESSION_STORAGE_KEY);
   sessionStorage.removeItem(SESSION_STORAGE_KEY);
 
   const data = JSON.stringify({ userId });
 
+  //จดจำ
   if (remember) {
+    //TRUE = Local
     localStorage.setItem(SESSION_STORAGE_KEY, data);
   } else {
+    //FALSE = Session
     sessionStorage.setItem(SESSION_STORAGE_KEY, data);
   }
 
@@ -87,9 +86,7 @@ export function getCurrentUser(): AuthUser | null {
     if (!raw) return null;
 
     const session = JSON.parse(raw) as Session;
-    const account = getAccounts().find(
-      (item) => item.id === session.userId
-    );
+    const account = getAccounts().find((item) => item.id === session.userId);
 
     if (!account) return null;
 
@@ -97,7 +94,6 @@ export function getCurrentUser(): AuthUser | null {
       id: account.id,
       username: account.username,
       email: account.email,
-      phone: account.phone,
       role: account.role,
     };
   } catch {
@@ -105,10 +101,9 @@ export function getCurrentUser(): AuthUser | null {
   }
 }
 
-export async function registerLocalUser(values: {
+export async function registerUser(values: {
   username: string;
   email: string;
-  phone?: string;
   password: string;
 }): Promise<AuthUser> {
   const username = values.username.trim();
@@ -127,61 +122,63 @@ export async function registerLocalUser(values: {
     throw new Error("รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร");
   }
 
+
+  // 2 Check Username
+  //
   const accounts = getAccounts();
 
-  if (
-    accounts.some(
-      (a) => normalize(a.username) === normalize(username)
-    )
-  ) {
+  if 
+  (accounts.some((a) => normalize(a.username) === normalize(username))) {
     throw new Error("ชื่อผู้ใช้นี้ถูกใช้แล้ว");
   }
 
-  if (
-    accounts.some(
-      (a) => normalize(a.email) === email
-    )
-  ) {
+  if 
+  (accounts.some((a) => normalize(a.email) === email)) {
     throw new Error("อีเมลนี้ถูกใช้แล้ว");
   }
 
+  //3 Create Account
   const account: Account = {
-    id: crypto.randomUUID(),
+    id: username,
     username,
     email,
-    phone: "",
     password,
     role: "user",
   };
+
+
+
+  //4 SAVE LOCAL
 
   const raw = localStorage.getItem(ACCOUNT_STORAGE_KEY);
   let saved: Account[] = [];
 
   try {
+    //
     const parsed = raw ? JSON.parse(raw) : [];
     if (Array.isArray(parsed)) {
+      //กรองข้อมูลบัญชี User? pass=string?
       saved = parsed.filter(
-        (item) =>
-          item?.role === "user" &&
-          typeof item.password === "string"
+        (item) => item?.role === "user" && typeof item.password === "string",
       );
     }
+
+    //error = catch save = []
   } catch {
     saved = [];
   }
 
   localStorage.setItem(
     ACCOUNT_STORAGE_KEY,
-    JSON.stringify([...saved, account])
+    JSON.stringify([...saved, account]),
   );
-
+  //5 SAVE-SESSION
   saveSession(account.id, false);
 
   return {
     id: account.id,
     username: account.username,
     email: account.email,
-    phone: account.phone,
     role: account.role,
   };
 }
@@ -189,14 +186,12 @@ export async function registerLocalUser(values: {
 export async function loginLocalUser(
   identifier: string,
   password: string,
-  remember = false
+  remember = false,
 ): Promise<AuthUser> {
   const id = normalize(identifier);
 
   const account = getAccounts().find(
-    (a) =>
-      normalize(a.username) === id ||
-      normalize(a.email) === id
+    (a) => normalize(a.username) === id || normalize(a.email) === id,
   );
 
   if (!account || account.password !== password) {
@@ -209,7 +204,6 @@ export async function loginLocalUser(
     id: account.id,
     username: account.username,
     email: account.email,
-    phone: account.phone,
     role: account.role,
   };
 }
