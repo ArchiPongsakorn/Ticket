@@ -9,6 +9,7 @@ import AuditLogContent from "@/components/admin/audit-log-content";
 import CheckSlipContent from "@/components/admin/check-slip-content";
 import DashboardContent from "@/components/admin/dashboard-content";
 import EventTokenManagementSystem from "./event-tokens/page";
+import PricingContent from "@/components/admin/pricing-content";
 import ReportContent from "@/components/admin/report-content";
 import StoreManagementContent from "@/components/admin/store-management-content";
 import UserManagementContent from "@/components/admin/user-management-content";
@@ -123,8 +124,10 @@ export default function Home() {
     content = <StoreManagementContent />;
   } else if (currentPage === "users") {
     content = <UserManagementContent />;
+  } else if (currentPage === "pricing") {
+    content = <PricingContent />;
   } else if (
-    ["Token", "scan-qr", "pricing", "shop", "scan-qr-shop"].includes(
+    ["Token", "scan-qr", "shop", "scan-qr-shop"].includes(
       currentPage,
     )
   ) {
@@ -139,9 +142,7 @@ export default function Home() {
         ? "topup"
         : currentPage === "scan-qr"
           ? "checkin"
-          : currentPage === "pricing"
-            ? "products"
-            : currentPage === "shop"
+          : currentPage === "shop"
               ? "store"
               : currentPage === "scan-qr-shop"
                 ? "shop-scan"
