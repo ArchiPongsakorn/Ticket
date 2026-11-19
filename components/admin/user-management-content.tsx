@@ -30,7 +30,7 @@ export default function UserManagementContent() {
             type="button"
             className="rounded-xl border border-[#49a5fb] px-4 py-2.5 text-sm font-semibold text-[#49a5fb] hover:bg-[#19395e]"
           >
-            ↓ &nbsp;Export CSV
+          Export CSV
           </button>
         </div>
 

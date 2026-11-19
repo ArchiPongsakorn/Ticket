@@ -16,6 +16,7 @@ import PriceAdmin from "@/components/admin/priceadmin";
 import Shop from "@/components/admin/shop";
 import QrMerchant from "@/components/admin/qrmerchant";
 import Qrevent from "@/components/admin/qrevent";
+import Merchant from "@/components/admin/merchant";
 
 import {
   Sidebar,
@@ -117,7 +118,7 @@ export default function Home() {
     content = <AuditLogContent />;
   } else if (currentPage === "report") {
     content = <ReportContent />;
-  } else if (currentPage === "stores") {
+  } else if (currentPage === "Shop") {
     content = <StoreManagementContent />;
   } else if (currentPage === "users") {
     content = <UserManagementContent />;
@@ -129,6 +130,8 @@ export default function Home() {
     content = <Qrevent/>;
   } else if (currentPage === "qrmerchant") {
     content = <QrMerchant/>;
+  } else if (currentPage === "Merchant"){
+    content = <Merchant/>;
   }
 
   // ไม่แสดงเนื้อหาก่อนตรวจ Role
