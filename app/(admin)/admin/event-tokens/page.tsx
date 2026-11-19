@@ -101,7 +101,7 @@ export default function EventTokenManagementSystem({
 
   return (
     <div
-      className={`${section === "checkin" ? "h-svh overflow-hidden p-3" : "min-h-screen p-4 md:p-8"} bg-[#0f2038] font-sans text-[#d6e0ed]`}
+      className={`${section === "checkin" ? "h-svh overflow-hidden p-3" : "min-h-screen p-4 md:p-8"} bg-[#0a1628] font-sans text-[#d6e0ed]`}
     >
       <div className={section === "checkin" ? "h-full w-full" : "w-full"}>
         {/* Header & Navigation */}
