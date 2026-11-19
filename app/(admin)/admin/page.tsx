@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState, type CSSProperties } from "react";
@@ -6,13 +5,17 @@ import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 
 import AdminMenu from "@/components/admin/admin-menu";
+import Admintoken from "@/components/admin/admintoken";
 import AuditLogContent from "@/components/admin/audit-log-content";
 import CheckSlipContent from "@/components/admin/check-slip-content";
 import DashboardContent from "@/components/admin/dashboard-content";
-import EventTokenManagementSystem from "./event-tokens/page";
 import ReportContent from "@/components/admin/report-content";
 import StoreManagementContent from "@/components/admin/store-management-content";
 import UserManagementContent from "@/components/admin/user-management-content";
+import PriceAdmin from "@/components/admin/priceadmin";
+import Shop from "@/components/admin/shop";
+import QrMerchant from "@/components/admin/qrmerchant";
+import Qrevent from "@/components/admin/qrevent";
 
 import {
   Sidebar,
@@ -79,7 +82,7 @@ export default function Home() {
     };
   }, [router]);
 
-  // ออกจากระบบ
+  // logouttt
   const handleLogout = () => {
     sessionStorage.removeItem("ticket:returnTo");
     logoutLocalUser();
@@ -88,11 +91,9 @@ export default function Home() {
 
   // จำกัดหน้า Staff และ Merchant
   const currentPage =
-    role === "staff" &&
-    !["Token", "scan-qr"].includes(activePage)
+    role === "staff" && !["Token", "scan-qr"].includes(activePage)
       ? "Token"
-      : role === "merchant" &&
-          !["shop", "scan-qr-shop"].includes(activePage)
+      : role === "merchant" && !["shop", "scan-qr-shop"].includes(activePage)
         ? "shop"
         : activePage;
 
@@ -100,15 +101,14 @@ export default function Home() {
   const limitedMenus =
     role === "staff"
       ? [
-          { id: "Token", label: "เติม Token" },
+          { id: "Admintoken", label: "เติม Token" },
           { id: "scan-qr", label: "สแกน QR CODE เข้างาน" },
         ]
       : [
-          { id: "shop", label: "ร้านค้า" },
+          { id: "Shop", label: "ร้านค้า" },
           { id: "scan-qr-shop", label: "สแกน QR ตัด Token" },
         ];
 
-  // เลือกเนื้อหาที่จะแสดง
   let content = <DashboardContent />;
 
   if (currentPage === "check-slip") {
@@ -121,31 +121,14 @@ export default function Home() {
     content = <StoreManagementContent />;
   } else if (currentPage === "users") {
     content = <UserManagementContent />;
-  } else if (
-    ["Token", "scan-qr", "pricing", "shop", "scan-qr-shop"].includes(
-      currentPage
-    )
-  ) {
-    const section:
-      | "topup"
-      | "checkin"
-      | "products"
-      | "pos"
-      | "store"
-      | "shop-scan" =
-      currentPage === "Token"
-        ? "topup"
-        : currentPage === "scan-qr"
-          ? "checkin"
-          : currentPage === "pricing"
-            ? "products"
-            : currentPage === "shop"
-              ? "store"
-              : currentPage === "scan-qr-shop"
-                ? "shop-scan"
-                : "pos";
-
-    content = <EventTokenManagementSystem section={section} />;
+  } else if (currentPage === "Admintoken") {
+    content = <Admintoken />;
+  } else if (currentPage === "PriceAdmin") {
+    content = <PriceAdmin />;
+  } else if (currentPage === "qrevent") {
+    content = <Qrevent/>;
+  } else if (currentPage === "qrmerchant") {
+    content = <QrMerchant/>;
   }
 
   // ไม่แสดงเนื้อหาก่อนตรวจ Role
@@ -154,11 +137,7 @@ export default function Home() {
   }
 
   const roleName =
-    role === "admin"
-      ? "Admin"
-      : role === "staff"
-        ? "Staff"
-        : "Merchant";
+    role === "admin" ? "Admin" : role === "staff" ? "Staff" : "Merchant";
 
   const roleDescription =
     role === "admin"
@@ -169,11 +148,10 @@ export default function Home() {
 
   return (
     <SidebarProvider
-      className="bg-[#0a1220]"
+      className="bg-[#0a1220] "
       style={{ "--sidebar-width": "220px" } as CSSProperties}
     >
       <Sidebar className="border-r border-[#263c57] bg-[#0F2038] px-3.75 py-5.5">
-
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-1.25">
           <div className="size-7.5 rounded-lg bg-[#49a5fb]" />
@@ -186,12 +164,8 @@ export default function Home() {
         <SidebarContent className="mt-10 overflow-hidden px-0">
           <SidebarGroup className="px-0">
             <SidebarGroupContent>
-
               {role === "admin" ? (
-                <AdminMenu
-                  activePage={currentPage}
-                  onSelect={setActivePage}
-                />
+                <AdminMenu activePage={currentPage} onSelect={setActivePage} />
               ) : (
                 <div className="flex flex-col gap-2">
                   {limitedMenus.map((menu) => (
@@ -210,17 +184,14 @@ export default function Home() {
                   ))}
                 </div>
               )}
-
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
 
-        {/* Profile */}
+        {/* AvaTUR*/}
         <div className="mt-auto flex w-full items-center gap-3 px-1.25">
           <Avatar className="shrink-0" size="md">
-            <AvatarFallback>
-              {roleName.charAt(0)}
-            </AvatarFallback>
+            <AvatarFallback>{roleName.charAt(0)}</AvatarFallback>
             <AvatarBadge status="online" size="lg" ping />
           </Avatar>
 
@@ -228,19 +199,14 @@ export default function Home() {
             <p className="truncate text-sm font-semibold text-white">
               {roleName}
             </p>
-            <p className="truncate text-xs text-[#8fa6c2]">
-              {roleDescription}
-            </p>
+            <p className="truncate text-xs text-[#8fa6c2]">{roleDescription}</p>
           </div>
         </div>
       </Sidebar>
 
-      {/* Main Content */}
-      <main className="min-h-full min-w-0 flex-1">
-        {content}
-      </main>
+      <main className="min-h-full min-w-0 flex-1">{content}</main>
 
-      {/* Logout มุมขวาล่าง */}
+      {/* Logout*/}
       <button
         type="button"
         onClick={handleLogout}
@@ -257,7 +223,6 @@ export default function Home() {
         <LogOut size={18} />
         ออกจากระบบ
       </button>
-
     </SidebarProvider>
   );
 }

@@ -10,14 +10,14 @@ export const menuItems = [
   { id: "dashboard", label: "Dashboard" },
   { id: "check-slip", label: "CheckSlip" },
   { id: "users", label: "จัดการ User" },
-  { id: "Token", label: "เติม Token" },
-  { id: "scan-qr", label: "สแกน QR CODE เข้างาน" },
-  { id: "pricing", label: "ตั้งราคา" },
+  { id: "Admintoken", label: "เติม Token" },
+  { id: "qrevent", label: "สแกน QR CODE เข้างาน" },
+  { id: "PriceAdmin", label: "ตั้งราคา" },
   { id: "stores", label: "จัดการร้านค้า" },
   { id: "report", label: "Report" },
   { id: "audit-log", label: "Audit Log" },
-  { id: "shop", label: "ร้านค้า" },
-  { id: "scan-qr-shop", label: "สแกน QR TOKEN ร้านค้า" },
+  { id: "Shop", label: "ร้านค้า" },
+  { id: "qrmerchant", label: "สแกน QR TOKEN ร้านค้า" },
 ];
 
 type AdminMenuProps = {
