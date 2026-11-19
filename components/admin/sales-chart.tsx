@@ -9,13 +9,14 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
 });
 
 const ticketSales = dashboardData.orders.reduce(
-  (total, order) => total + Number(order["price-ticket"]),
+  (total, order) => total + order.priceTicket,
   0,
 );
 const shirtSales = dashboardData.orders.reduce(
-  (total, order) => total + Number(order["price-shirt"]),
+  (total, order) => total + order.priceShirt,
   0,
 );
+
 const productSales = [ticketSales, shirtSales];
 
 const options: ApexOptions = {
@@ -49,15 +50,12 @@ const options: ApexOptions = {
   },
   yaxis: {
     min: 0,
-    max: Math.ceil(Math.max(...productSales, 1) / 1000) * 1000,
+    max: Math.ceil(Math.max(...productSales) / 1000) * 1000,
     tickAmount: 4,
     labels: { style: { colors: "#7188a5", fontSize: "10px" } },
   },
   tooltip: {
-    theme: "dark",
-    y: {
-      formatter: (value) => `${(value ?? 0).toLocaleString("th-TH")} บาท`,
-    },
+    enabled: false,
   },
 };
 

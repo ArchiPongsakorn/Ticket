@@ -127,9 +127,7 @@ export default function Home() {
   } else if (currentPage === "pricing") {
     content = <PricingContent />;
   } else if (
-    ["Token", "scan-qr", "shop", "scan-qr-shop"].includes(
-      currentPage,
-    )
+    ["Token", "scan-qr", "shop", "scan-qr-shop"].includes(currentPage)
   ) {
     const section:
       | "topup"
@@ -143,10 +141,10 @@ export default function Home() {
         : currentPage === "scan-qr"
           ? "checkin"
           : currentPage === "shop"
-              ? "store"
-              : currentPage === "scan-qr-shop"
-                ? "shop-scan"
-                : "pos";
+            ? "store"
+            : currentPage === "scan-qr-shop"
+              ? "shop-scan"
+              : "pos";
 
     content = <EventTokenManagementSystem section={section} />;
   }
@@ -160,11 +158,7 @@ export default function Home() {
     role === "admin" ? "Admin" : role === "staff" ? "Staff" : "Merchant";
 
   const roleDescription =
-    role === "admin"
-      ? "ผู้ดูแลระบบ"
-      : role === "staff"
-        ? "เจ้าหน้าที่"
-        : "ร้านค้า";
+    role === "admin" ? "ผู้ดูแลระบบ" : role === "staff" ? "เจ้าหน้าที่" : "ร้านค้า";
 
   return (
     <SidebarProvider
