@@ -97,6 +97,8 @@
   height: 130px;
   margin-top: -24px;
 }
+
+/* Animation */
 .stack {
   position: absolute;
   inset: 0;
@@ -151,6 +153,9 @@
   letter-spacing: 0.1em;
   writing-mode: vertical-rl;
 }
+
+/* Ticket Ani */
+/* set float 50% up7 re*/
 @keyframes float {
   50% {
     transform: translateY(-7px);
@@ -207,14 +212,7 @@
   right: 12px;
 }
 
-.decoStar {
-  position: absolute;
-  left: 30px;
-  bottom: -22px;
-  width: 46px;
-  color: var(--accent);
-  z-index: 2;
-}
+
 .decoTicket {
   position: absolute;
   right: 72px;

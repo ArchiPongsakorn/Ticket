@@ -5,9 +5,10 @@ import { usePersistentState } from "./usePersistentState";
 import { PRODUCTS_BY_ID } from "../data/catalog";
 import { lineKey, summarize } from "../lib/cart";
 
-/** ตะกร้าสินค้า: บัตรและของที่ระลึกเป็นสินค้าอิสระต่อกัน (ซื้ออย่างใดอย่างหนึ่งได้) */
+/** ตะกร้าสินค้า(ซื้ออย่างใดอย่างหนึ่งได้) */
 export function useCart() {
-  const [stored, setStored] = usePersistentState<CartLine[]>("ticket-cart", []);
+  //ใช้ use จัดการข้อมูล key  
+  const [stored, setStored] = usePersistentState<CartLine[]> ("ticket-cart", []);
 
   const lines = useMemo(
     () => stored.filter((l) => PRODUCTS_BY_ID[l.id] && l.qty > 0),
@@ -18,8 +19,13 @@ export function useCart() {
     (id: string, option = "") => {
       const max = PRODUCTS_BY_ID[id].max;
       setStored((prev) => {
+        //
+        //find id 
+        // id option qty 
         const found = prev.find((l) => l.id === id && l.option === option);
+        //
         if (!found) return [...prev, { id, option, qty: 1 }];
+
         return prev.map((l) =>
           l === found ? { ...l, qty: Math.min(max, l.qty + 1) } : l,
         );
@@ -56,6 +62,7 @@ export function useCart() {
     changeQty,
     remove,
     clear,
+    
     totals: useMemo(() => summarize(lines), [lines]),
   };
 }

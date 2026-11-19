@@ -38,10 +38,12 @@ export default function ShopClient() {
   const cart = useCart();
   const [picked, setPicked] = useState(defaultPicks);
   const [step, setStep] = useState(1);
-  const [attendees, setAttendees] = useState<AttendeesByUnit>({}); // ข้อมูลรายชิ้น { [unit.key]: { ...ช่องกรอก, method? } }
-  const [errors, setErrors] = useState<UnitErrors>({}); // { [unit.key]: { [ชื่อช่อง | "method"]: ข้อความ } }
+  const [attendees, setAttendees] = useState<AttendeesByUnit>({}); // เก็บข้อมูลที่ผู้ใช้กรอกในฟอร์ม att=fil_pro set=update
+  const [errors, setErrors] = useState<UnitErrors>({}); // 
   const [checkoutOpen, setCheckoutOpen] = useState(false);
-  const [sizeOpen, setSizeOpen] = useState(false);
+
+
+  const [sizeOpen, setSizeOpen] = useState(false); //ตาราง
 
   const { lines, totals } = cart;
   const units = useMemo(() => orderUnits(lines), [lines]);
@@ -69,7 +71,8 @@ export default function ShopClient() {
     }
   };
 
-  // ติ๊กรับที่งาน/จัดส่ง (ถ้าเปลี่ยนวิธี ล้างข้อความผิดของช่องที่อยู่ เพราะกติกาเปลี่ยน)
+  // ติ๊กรับที่งาน/จัดส่ง )
+  //
   const changeMethod = (key: string, method: DeliveryMethod) => {
     setAttendees((a) => ({ ...a, [key]: { ...(a[key] || {}), method } }));
     setErrors((e) => ({ ...e, [key]: { ...e[key], method: "", addr: "" } }));
@@ -150,6 +153,12 @@ export default function ShopClient() {
               onPick={(id, option) =>
                 setPicked((p) => ({ ...p, [id]: option }))
               }
+
+
+
+
+              //add product
+              //user click 
               onAdd={(id) => cart.add(id, picked[id] || "")}
               onSizeGuide={() => setSizeOpen(true)}
             />
@@ -197,7 +206,10 @@ export default function ShopClient() {
         </div>
       )}
 
+
+      {/* Show size */}
       <SizeGuideDialog open={sizeOpen} onClose={() => setSizeOpen(false)} />
+
       <CheckoutDialog
         open={checkoutOpen}
         onClose={closeCheckout}

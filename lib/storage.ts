@@ -10,7 +10,12 @@ export function readJSON<T>(key: string, fallback: T): T {
 
 export function writeJSON<T>(key: string, value: T): void {
   try {
-    window.localStorage.setItem(key, JSON.stringify(value));
+
+    //update cart
+    //set
+    window.localStorage.setItem(
+      key,
+       JSON.stringify(value));
   } catch {
     /* ใช้งานต่อได้แม้บันทึกไม่ได้ */
   }

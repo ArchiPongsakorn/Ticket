@@ -27,6 +27,7 @@ export default function ProductCatalog({
           </h2>
           <p className={s.groupSub}>{g.sub}</p>
           <div className={s.grid}>
+            {/* fil - array  */}
             {CATALOG.filter((p) => p.type === g.type).map((p) => (
               <ProductCard
                 key={p.id}

@@ -4,6 +4,10 @@ import { PRODUCTS_BY_ID } from "../data/catalog";
 /** คีย์ประจำบรรทัดในตะกร้า (สินค้า + ไซซ์) */
 export const lineKey = (line: CartLine): string => `${line.id}|${line.option}`;
 
+
+
+//คำนวนสินค้า 
+//
 export function summarize(lines: CartLine[]): CartTotals {
   const sum = {
     count: 0,
@@ -12,14 +16,20 @@ export function summarize(lines: CartLine[]): CartTotals {
     hasTicket: false,
     hasMerch: false,
   };
+
+  //for of loop
   for (const l of lines) {
+    //get id re product
     const p = PRODUCTS_BY_ID[l.id];
     sum.count += l.qty;
     sum.total += l.qty * p.price;
-    sum.tokens += l.qty * (p.tokens || 0);
+    sum.tokens += l.qty * (p.tokens || 0); 
+    
+    //check product ticket
     if (p.type === "ticket") sum.hasTicket = true;
     else sum.hasMerch = true;
   }
+  
   return sum;
 }
 

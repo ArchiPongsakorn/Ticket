@@ -42,12 +42,15 @@ export const MERCH_FIELDS: FieldDefinition[] = [
     type: "text",
     full: true,
     hint: "จำเป็นเฉพาะเมื่อเลือกจัดส่ง (รับที่งานไม่ต้องกรอก)",
+    //check value = deli 
     validate: (val, values) =>
       values.method === "delivery" ? v.minLen("ที่อยู่", 10)(val) : "",
   },
 ];
 
 /** ช่องที่ต้องกรอกของแต่ละรายการ (บัตร หรือ ของที่ระลึก) */
+//Ticket = ATTENDEE
+//T = MERCH
 export const fieldsForUnit = (unit: OrderUnit): FieldDefinition[] =>
   unit.kind === "ticket" ? ATTENDEE_FIELDS : MERCH_FIELDS;
 

@@ -15,6 +15,7 @@ import { baht, num } from "../../lib/format";
 import { cx } from "../../lib/cx";
 import s from "./shop.module.css";
 
+//set array 
 const METHODS: Array<{ value: DeliveryMethod; title: string; desc: string }> = [
   {
     value: "pickup",
@@ -47,6 +48,8 @@ export default function AttendeeSection({
   onChange: (key: string, field: FieldDefinition, value: string) => void;
   onMethod: (key: string, method: DeliveryMethod) => void;
 }) {
+  //complete check product by attendee
+  //validate check {  }
   const complete = (u: OrderUnit) => {
     const data = attendees[u.key] || {};
     const noFieldErrors =
@@ -55,6 +58,9 @@ export default function AttendeeSection({
       ? noFieldErrors
       : Boolean(data.method) && noFieldErrors;
   };
+
+  //นับจำนวนกรอก
+  //fil check
   const doneCount = units.filter(complete).length;
   const maxDate = today();
 
@@ -111,6 +117,7 @@ export default function AttendeeSection({
                       role="radiogroup"
                       aria-label={`วิธีรับ ${p.name}`}
                     >
+
                       {METHODS.map((m) => (
                         <label key={m.value} className={s.method}>
                           <input
@@ -119,6 +126,7 @@ export default function AttendeeSection({
                             name={`m-${u.key}`}
                             value={m.value}
                             checked={data.method === m.value}
+                            // delivery 
                             onChange={() => onMethod(u.key, m.value)}
                           />
                           <span>
