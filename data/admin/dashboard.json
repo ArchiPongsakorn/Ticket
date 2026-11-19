@@ -89,36 +89,86 @@
     { "day": "Sun", "ticket": 430, "shirt": 270 }
   ],
 
-    "storeSales": [
-      {
-        "name": "ร้านที่ 1",
-        "progress": 90,
-        "barColor": "oklch(54.6% 0.245 262.881)",
-        "Sale": 5000
+  "storeSales": [
+    {
+      "id": "store-1",
+      "name": "น้ำใส เย็นชื่นใจ",
+      "product": {
+        "id": "drink",
+        "name": "น้ำดื่มเย็น",
+        "price": 20,
+        "stock": 100
       },
-      {
-        "name": "ร้านที่ 2",
-        "progress": 80,
-        "barColor": "oklch(58.5% 0.233 277.117)",
-        "Sale": 4500
+      "adminEmail": "merchant@example.com",
+      "status": "เปิดขาย",
+      "salesCount": 50,
+      "progress": 90,
+      "barColor": "oklch(54.6% 0.245 262.881)",
+      "Sale": 5000
+    },
+    {
+      "id": "store-2",
+      "name": "ครัวกะเพราไฟแรง",
+      "product": {
+        "id": "basil-rice",
+        "name": "ข้าวกล่องกะเพราไก่",
+        "price": 60,
+        "stock": 50
       },
-      {
-    "name": "ร้านที่ 3",
-    "progress": 68,
-    "barColor": "oklch(76.5% 0.177 163.223)",
-    "Sale": 3000
+      "adminEmail": "merchant1@example.com",
+      "status": "เปิดขาย",
+      "salesCount": 42,
+      "progress": 80,
+      "barColor": "oklch(58.5% 0.233 277.117)",
+      "Sale": 4500
+    },
+    {
+      "id": "store-3",
+      "name": "ขนมกรุบกรอบ",
+      "product": {
+        "id": "snack",
+        "name": "มันฝรั่งทอดกรอบ",
+        "price": 35,
+        "stock": 80
       },
-      {
-    "name": "ร้านที่ 4",
-    "progress": 50,
-    "barColor": "oklch(79.5% 0.184 86.047)",
-    "Sale": 2500
+      "adminEmail": "merchant2@example.com",
+      "status": "เปิดขาย",
+      "salesCount": 36,
+      "progress": 68,
+      "barColor": "oklch(76.5% 0.177 163.223)",
+      "Sale": 3000
+    },
+    {
+      "id": "store-4",
+      "name": "ของฝากจากใจ",
+      "product": {
+        "id": "keychain",
+        "name": "พวงกุญแจที่ระลึก",
+        "price": 50,
+        "stock": 60
       },
-      {
-    "name": "ร้านที่ 5",
-    "progress": 40,
-    "barColor": "oklch(76.9% 0.188 70.08)",
-    "Sale": 2000
-      }
-    ]
+      "adminEmail": "merchant3@example.com",
+      "status": "เปิดขาย",
+      "salesCount": 28,
+      "progress": 50,
+      "barColor": "oklch(79.5% 0.184 86.047)",
+      "Sale": 2500
+    },
+    {
+      "id": "store-5",
+      "name": "ตุ๊กตา",
+      "product": {
+        "id": "event-shirt",
+        "name": "ตุ๊กตา",
+        "price": 350,
+        "stock": 30
+      },
+      "adminEmail": "merchant5@example.com",
+      "status": "เปิดขาย",
+      "salesCount": 18,
+      "progress": 40,
+      "barColor": "oklch(76.9% 0.188 70.08)",
+      "Sale": 2000
+    }
+  ]
 }

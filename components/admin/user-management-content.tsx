@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import dashboardData from "@/data/admin/dashboard.json";
 import { Badge } from "@/components/admin/tailgrids/core/badge";
 import {
@@ -18,6 +19,32 @@ const statusStyles = {
 };
 
 export default function UserManagementContent() {
+  const [users, setUsers] = useState(() => dashboardData.users);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const filteredUsers = users.filter((user) => {
+    const searchText = search.trim().toLowerCase();
+    const matchesSearch =
+      !searchText ||
+      user.name.toLowerCase().includes(searchText) ||
+      user.email.toLowerCase().includes(searchText);
+
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "pending" && user.status === "รอตรวจสอบ") ||
+      (statusFilter === "approved" && user.status === "อนุมัติแล้ว") ||
+      (statusFilter === "rejected" && user.status === "ไม่อนุมัติ");
+
+    return matchesSearch && matchesStatus;
+  });
+
+  const handleDeleteUser = (email: string, name: string) => {
+    if (!window.confirm(`ต้องการลบผู้ใช้ ${name} ใช่หรือไม่?`)) return;
+
+    setUsers((previous) => previous.filter((user) => user.email !== email));
+  };
+
   return (
     <main className="min-h-svh min-w-0 flex-1 overflow-y-auto bg-[#0a1628] p-4 text-white sm:p-6 lg:p-8">
       <div className="w-full">
@@ -40,13 +67,16 @@ export default function UserManagementContent() {
             <input
               type="text"
               placeholder="ชื่อ นามสกุล หรืออีเมล"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
               className="mt-2 w-full rounded-xl border border-[#244466] bg-[#10233d] px-3 py-3 text-sm text-white outline-none placeholder:text-[#7188a5]"
             />
           </label>
           <label className="text-sm text-[#d6e0ed]">
             สถานะ
             <select
-              defaultValue="all"
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value)}
               className="mt-2 w-full rounded-xl border border-[#244466] bg-[#10233d] px-3 py-3 text-sm text-white outline-none"
             >
               <option value="all">ทั้งหมด</option>
@@ -68,10 +98,11 @@ export default function UserManagementContent() {
                   <TableHead className="px-2 pb-3 font-normal">เสื้อ</TableHead>
                   <TableHead className="px-2 pb-3 font-normal">Token</TableHead>
                   <TableHead className="px-2 pb-3 font-normal">สถานะ</TableHead>
+                  <TableHead className="px-2 pb-3 text-right font-normal"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {dashboardData.users.map((user) => (
+                {filteredUsers.map((user) => (
                   <TableRow
                     key={user.email}
                     className="border-b border-[#244466] last:border-b-0"
@@ -90,8 +121,27 @@ export default function UserManagementContent() {
                         {user.status}
                       </Badge>
                     </TableCell>
+                    <TableCell className="px-2 py-3 text-right">
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteUser(user.email, user.name)}
+                        className="rounded-lg border border-red-500/40 px-3 py-1.5 text-xs font-medium text-red-300 transition-colors hover:bg-red-500 hover:text-white"
+                      >
+                        ลบ
+                      </button>
+                    </TableCell>
                   </TableRow>
                 ))}
+                {filteredUsers.length === 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={7}
+                      className="px-2 py-8 text-center text-[#8fa6c2]"
+                    >
+                      ไม่พบข้อมูลผู้ใช้งาน
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </TableRoot>
           </div>
