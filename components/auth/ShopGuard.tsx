@@ -17,10 +17,12 @@ export default function ShopGuard({
   const router = useRouter();
   const [allowed, setAllowed] = useState(false);
 
+
+  //CHECK ROLE USER
   useEffect(() => {
     function checkLogin() {
       const user = getCurrentUser();
-
+      
       if (!user) {
         setAllowed(false);
         sessionStorage.setItem("ticket:returnTo", "/shop");

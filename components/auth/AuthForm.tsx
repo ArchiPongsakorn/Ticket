@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
 import Field from "../ui/Field";
 import { AUTH_FORMS } from "../../data/forms";
 import { validateFields } from "../../lib/validators";
-import { loginLocalUser, registerLocalUser } from "@/lib/local-auth";
+import { loginLocalUser, registerUser } from "@/lib/local-auth";
 import s from "./auth.module.css";
 
 export default function AuthForm({
@@ -29,6 +29,7 @@ export default function AuthForm({
   const [values, setValues] = useState<FormValues>({});
   const [errors, setErrors] = useState<FieldErrors>({});
   const [submitError, setSubmitError] = useState("");
+
   const [remember, setRemember] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -83,34 +84,37 @@ export default function AuthForm({
 
     setSubmitting(true);
 
+    //1-SubmitRegister
+    //รับข้อมูลจากที่สมัคร
     try {
       let user;
-
       if (mode === "register") {
         // สมัครสมาชิกใหม่เป็น User เท่านั้น
-        user = await registerLocalUser({
+        user = await registerUser({
           username: values.username ?? "",
           email: values.email ?? "",
           password: values.password ?? "",
         });
       } else {
         // Login ได้ทุก Role
+        
         user = await loginLocalUser(
           values.id ?? "",
           values.password ?? "",
+          //จดจำ ส่งค่าไปตอน Login 
           remember,
         );
       }
 
       // ตรวจสอบหน้าที่ต้องกลับไปหลัง Login
       const returnTo = window.sessionStorage.getItem("ticket:returnTo");
-
+      //ลบ Session ที่มา
       window.sessionStorage.removeItem("ticket:returnTo");
 
       // ==============================
       // ROLE REDIRECT
       // ==============================
-
+      //CHECKROLE
       if (
         user.role === "admin" ||
         user.role === "staff" ||
@@ -126,7 +130,7 @@ export default function AuthForm({
       setSubmitError(
         error instanceof Error
           ? error.message
-          : "ไม่สามารถดำเนินการได้ กรุณาลองอีกครั้ง",
+          : "กรุณาลองอีกครั้ง",
       );
     } finally {
       setSubmitting(false);

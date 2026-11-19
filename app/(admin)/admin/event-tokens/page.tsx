@@ -4,15 +4,36 @@ import React, { useState } from "react";
 import CheckInScanSection from "@/components/admin/event-tokens/check-in-scan-section";
 import MockQrCode from "@/components/admin/event-tokens/mock-qr-code";
 import TopUpTokenSection from "@/components/admin/event-tokens/top-up-token-section";
-import type { ActivityLog, Attendee } from "@/components/admin/event-tokens/types";
+import type {
+  ActivityLog,
+  Attendee,
+} from "@/components/admin/event-tokens/types";
 
 // ==========================================
 // ข้อมูลจำลอง (Mock Data) สำหรับทดสอบระบบ
 // ==========================================
 const INITIAL_ATTENDEES = [
-  { id: "TKT-001", name: "สมชาย ใจดี", type: "VIP", tokens: 500, checkedIn: false },
-  { id: "TKT-002", name: "สมหญิง รักเรียน", type: "General", tokens: 120, checkedIn: true },
-  { id: "TKT-003", name: "อนันต์ มั่นคง", type: "General", tokens: 0, checkedIn: false },
+  {
+    id: "TKT-001",
+    name: "สมชาย ใจดี",
+    type: "VIP",
+    tokens: 500,
+    checkedIn: false,
+  },
+  {
+    id: "TKT-002",
+    name: "สมหญิง รักเรียน",
+    type: "General",
+    tokens: 120,
+    checkedIn: true,
+  },
+  {
+    id: "TKT-003",
+    name: "อนันต์ มั่นคง",
+    type: "General",
+    tokens: 0,
+    checkedIn: false,
+  },
 ];
 
 const INITIAL_PRODUCTS = [
@@ -21,7 +42,43 @@ const INITIAL_PRODUCTS = [
   { id: "PRD-03", name: "เสื้อยืดที่ระลึกงาน", price: 350, stock: 30 },
 ];
 
-type EventTokenSection = "topup" | "checkin" | "products" | "pos" | "store" | "shop-scan";
+// Type กลางที่ใช้ร่วมกันทุกหน้าของระบบสินค้าและ Token
+// อิงโครงสร้างสินค้าจากข้อมูลตั้งต้น เพื่อให้เพิ่ม/แก้ไขสินค้าได้อย่างปลอดภัย
+type Product = (typeof INITIAL_PRODUCTS)[number];
+type AddLog = (message: string, type?: string) => void;
+
+type ProductSectionProps = {
+  products: Product[];
+  setProducts: React.Dispatch<React.SetStateAction<Product[]>>;
+  addLog: AddLog;
+};
+
+type StoreDashboardProps = ProductSectionProps & {
+  logs: ActivityLog[];
+};
+
+type AttendeeSectionProps = {
+  attendees: Attendee[];
+  setAttendees: React.Dispatch<React.SetStateAction<Attendee[]>>;
+  addLog: AddLog;
+};
+
+type MerchantPosProps = AttendeeSectionProps & {
+  products: Product[];
+};
+
+type ScanResult = {
+  status: "success" | "error";
+  message: string;
+};
+
+type EventTokenSection =
+  | "topup"
+  | "checkin"
+  | "products"
+  | "pos"
+  | "store"
+  | "shop-scan";
 
 export default function EventTokenManagementSystem({
   section,
@@ -33,7 +90,7 @@ export default function EventTokenManagementSystem({
 
   // State หลักของระบบ
   const [attendees, setAttendees] = useState<Attendee[]>(INITIAL_ATTENDEES);
-  const [products, setProducts] = useState(INITIAL_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [logs, setLogs] = useState<ActivityLog[]>([]);
 
   // Helper บันทึกประวัติการทำรายการ
@@ -43,36 +100,40 @@ export default function EventTokenManagementSystem({
   };
 
   return (
-    <div className={`${section === "checkin" ? "h-svh overflow-hidden p-3" : "min-h-screen p-4 md:p-8"} bg-[#0f2038] font-sans text-[#d6e0ed]`}>
+    <div
+      className={`${section === "checkin" ? "h-svh overflow-hidden p-3" : "min-h-screen p-4 md:p-8"} bg-[#0f2038] font-sans text-[#d6e0ed]`}
+    >
       <div className={section === "checkin" ? "h-full w-full" : "w-full"}>
         {/* Header & Navigation */}
-        {!section && <header className="mb-6 bg-[#10233d] p-6 rounded-2xl shadow-sm border border-[#244466]">
-          <h1 className="text-2xl font-bold text-white mb-4">
-            ระบบจัดการงานอีเวนต์ & ร้านค้า Token
-          </h1>
-          <div className="flex flex-wrap gap-2">
-            <TabButton
-              active={activeTab === "topup"}
-              onClick={() => setActiveTab("topup")}
-              label="1. เติม Token"
-            />
-            <TabButton
-              active={activeTab === "checkin"}
-              onClick={() => setActiveTab("checkin")}
-              label="2. สแกน QR เข้างาน"
-            />
-            <TabButton
-              active={activeTab === "products"}
-              onClick={() => setActiveTab("products")}
-              label="3. ตั้งราคาสินค้า"
-            />
-            <TabButton
-              active={activeTab === "pos"}
-              onClick={() => setActiveTab("pos")}
-              label="4. ร้านค้า (สแกน QR ลูกค้า)"
-            />
-          </div>
-        </header>}
+        {!section && (
+          <header className="mb-6 bg-[#10233d] p-6 rounded-2xl shadow-sm border border-[#244466]">
+            <h1 className="text-2xl font-bold text-white mb-4">
+              ระบบจัดการงานอีเวนต์ & ร้านค้า Token
+            </h1>
+            <div className="flex flex-wrap gap-2">
+              <TabButton
+                active={activeTab === "topup"}
+                onClick={() => setActiveTab("topup")}
+                label="1. เติม Token"
+              />
+              <TabButton
+                active={activeTab === "checkin"}
+                onClick={() => setActiveTab("checkin")}
+                label="2. สแกน QR เข้างาน"
+              />
+              <TabButton
+                active={activeTab === "products"}
+                onClick={() => setActiveTab("products")}
+                label="3. ตั้งราคาสินค้า"
+              />
+              <TabButton
+                active={activeTab === "pos"}
+                onClick={() => setActiveTab("pos")}
+                label="4. ร้านค้า (สแกน QR ลูกค้า)"
+              />
+            </div>
+          </header>
+        )}
 
         {/* พื้นที่แสดงผลตามเมนูที่เลือก */}
         <div className={section === "checkin" ? "h-full w-full" : "w-full"}>
@@ -108,20 +169,33 @@ export default function EventTokenManagementSystem({
               />
             )}
             {visibleTab === "store" && (
-              <StoreDashboardSection products={products} setProducts={setProducts} logs={logs} addLog={addLog} />
+              <StoreDashboardSection
+                products={products}
+                setProducts={setProducts}
+                logs={logs}
+                addLog={addLog}
+              />
             )}
             {visibleTab === "shop-scan" && (
-              <StoreTokenScanSection attendees={attendees} setAttendees={setAttendees} addLog={addLog} />
+              <StoreTokenScanSection
+                attendees={attendees}
+                setAttendees={setAttendees}
+                addLog={addLog}
+              />
             )}
           </div>
-
         </div>
       </div>
     </div>
   );
 }
 
-function StoreDashboardSection({ products, setProducts, logs, addLog }) {
+function StoreDashboardSection({
+  products,
+  setProducts,
+  logs,
+  addLog,
+}: StoreDashboardProps) {
   const sales = logs.filter((log) => log.message.startsWith("ชำระเงินสำเร็จ"));
   const totalSales = sales.reduce((total, log) => {
     const amount = log.message.match(/จ่าย (\d+) Token/);
@@ -138,15 +212,21 @@ function StoreDashboardSection({ products, setProducts, logs, addLog }) {
       <section className="grid gap-3 sm:grid-cols-3 xl:max-w-5xl">
         <div className="rounded-xl border border-[#244466] bg-[#10233d] p-4">
           <p className="text-xs text-[#8fa6c2]">ยอดขายรวม (Token)</p>
-          <p className="mt-2 text-2xl font-bold text-[#b18cff]">{(1000 + totalSales).toLocaleString()}</p>
+          <p className="mt-2 text-2xl font-bold text-[#b18cff]">
+            {(1000 + totalSales).toLocaleString()}
+          </p>
         </div>
         <div className="rounded-xl border border-[#244466] bg-[#10233d] p-4">
           <p className="text-xs text-[#8fa6c2]">จำนวนรายการขาย</p>
-          <p className="mt-2 text-2xl font-bold text-[#49a5fb]">{50 + sales.length}</p>
+          <p className="mt-2 text-2xl font-bold text-[#49a5fb]">
+            {50 + sales.length}
+          </p>
         </div>
         <div className="rounded-xl border border-[#244466] bg-[#10233d] p-4">
           <p className="text-xs text-[#8fa6c2]">สินค้าขายดี</p>
-          <p className="mt-2 text-xl font-bold text-[#22d3b4]">{products[0]?.name ?? "ยังไม่มีสินค้า"}</p>
+          <p className="mt-2 text-xl font-bold text-[#22d3b4]">
+            {products[0]?.name ?? "ยังไม่มีสินค้า"}
+          </p>
         </div>
       </section>
 
@@ -155,20 +235,42 @@ function StoreDashboardSection({ products, setProducts, logs, addLog }) {
           <h3 className="mb-3 text-sm font-bold text-white">สินค้าของคุณ</h3>
           <div className="divide-y divide-[#244466]">
             {products.map((product) => (
-              <div key={product.id} className="grid grid-cols-[minmax(0,1fr)_84px_68px] items-center gap-3 py-2.5 first:pt-0 last:pb-0">
-                <span className="truncate text-sm text-[#d6e0ed]">{product.name}</span>
-                <label className="sr-only" htmlFor={`store-price-${product.id}`}>ราคาของ {product.name}</label>
+              <div
+                key={product.id}
+                className="grid grid-cols-[minmax(0,1fr)_84px_68px] items-center gap-3 py-2.5 first:pt-0 last:pb-0"
+              >
+                <span className="truncate text-sm text-[#d6e0ed]">
+                  {product.name}
+                </span>
+                <label
+                  className="sr-only"
+                  htmlFor={`store-price-${product.id}`}
+                >
+                  ราคาของ {product.name}
+                </label>
                 <input
                   id={`store-price-${product.id}`}
                   type="number"
                   min="0"
                   value={product.price}
-                  onChange={(event) => setProducts((previous) => previous.map((item) => item.id === product.id ? { ...item, price: Number(event.target.value) } : item))}
+                  onChange={(event) =>
+                    setProducts((previous) =>
+                      previous.map((item) =>
+                        item.id === product.id
+                          ? { ...item, price: Number(event.target.value) }
+                          : item,
+                      ),
+                    )
+                  }
                   className="w-full rounded-md border border-[#244466] bg-[#0a1628] px-2 py-1.5 text-xs text-white outline-none focus:border-[#49a5fb]"
                 />
                 <button
                   type="button"
-                  onClick={() => addLog(`อัปเดตราคาสินค้า ${product.name}: ${product.price} Token`)}
+                  onClick={() =>
+                    addLog(
+                      `อัปเดตราคาสินค้า ${product.name}: ${product.price} Token`,
+                    )
+                  }
                   className="rounded-md bg-[#49a5fb] px-2 py-1.5 text-xs font-bold text-[#071426] hover:bg-[#368fdf]"
                 >
                   บันทึก
@@ -181,28 +283,42 @@ function StoreDashboardSection({ products, setProducts, logs, addLog }) {
         <div className="h-fit rounded-2xl border border-[#244466] bg-[#10233d] p-4">
           <h3 className="mb-3 text-sm font-bold text-white">รายการขายล่าสุด</h3>
           <div className="divide-y divide-[#244466]">
-            {sales.length === 0 ? (
-              ["14:50", "14:30", "14:27"].map((time, index) => (
-                <div key={time} className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
-                  <div>
-                    <p className="text-xs text-[#d6e0ed]">{products[0]?.name ?? "สินค้า"}</p>
-                    <p className="mt-1 text-[10px] text-[#7188a5]">{time}</p>
+            {sales.length === 0
+              ? ["14:50", "14:30", "14:27"].map((time) => (
+                  <div
+                    key={time}
+                    className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
+                  >
+                    <div>
+                      <p className="text-xs text-[#d6e0ed]">
+                        {products[0]?.name ?? "สินค้า"}
+                      </p>
+                      <p className="mt-1 text-[10px] text-[#7188a5]">{time}</p>
+                    </div>
+                    <span className="text-xs font-bold text-[#b18cff]">
+                      200
+                    </span>
                   </div>
-                  <span className="text-xs font-bold text-[#b18cff]">200</span>
-                </div>
-              ))
-            ) : sales.slice(0, 5).map((sale) => {
-              const amount = sale.message.match(/จ่าย (\d+) Token/);
-              return (
-                <div key={sale.id} className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
-                  <div>
-                    <p className="text-xs text-[#d6e0ed]">ชำระเงินลูกค้า</p>
-                    <p className="mt-1 text-[10px] text-[#7188a5]">{sale.time}</p>
-                  </div>
-                  <span className="text-xs font-bold text-[#b18cff]">{amount?.[1] ?? 0}</span>
-                </div>
-              );
-            })}
+                ))
+              : sales.slice(0, 5).map((sale) => {
+                  const amount = sale.message.match(/จ่าย (\d+) Token/);
+                  return (
+                    <div
+                      key={sale.id}
+                      className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
+                    >
+                      <div>
+                        <p className="text-xs text-[#d6e0ed]">ชำระเงินลูกค้า</p>
+                        <p className="mt-1 text-[10px] text-[#7188a5]">
+                          {sale.time}
+                        </p>
+                      </div>
+                      <span className="text-xs font-bold text-[#b18cff]">
+                        {amount?.[1] ?? 0}
+                      </span>
+                    </div>
+                  );
+                })}
           </div>
         </div>
       </section>
@@ -210,12 +326,16 @@ function StoreDashboardSection({ products, setProducts, logs, addLog }) {
   );
 }
 
-function StoreTokenScanSection({ attendees, setAttendees, addLog }) {
+function StoreTokenScanSection({
+  attendees,
+  setAttendees,
+  addLog,
+}: AttendeeSectionProps) {
   const [customerQr, setCustomerQr] = useState("");
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState<ScanResult | null>(null);
   const chargeAmount = 50;
 
-  const handleScan = (event) => {
+  const handleScan = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const code = customerQr.trim().toUpperCase();
     const customer = attendees.find((attendee) => attendee.id === code);
@@ -226,15 +346,25 @@ function StoreTokenScanSection({ attendees, setAttendees, addLog }) {
       return;
     }
     if (customer.tokens < chargeAmount) {
-      setResult({ status: "error", message: `Token ของ ${customer.name} ไม่เพียงพอ` });
+      setResult({
+        status: "error",
+        message: `Token ของ ${customer.name} ไม่เพียงพอ`,
+      });
       addLog(`ชำระเงินล้มเหลว: Token ไม่พอสำหรับ ${customer.name}`, "error");
       return;
     }
 
-    setAttendees((previous) => previous.map((attendee) =>
-      attendee.id === customer.id ? { ...attendee, tokens: attendee.tokens - chargeAmount } : attendee
-    ));
-    setResult({ status: "success", message: `ตัด Token จาก ${customer.name} แล้ว` });
+    setAttendees((previous) =>
+      previous.map((attendee) =>
+        attendee.id === customer.id
+          ? { ...attendee, tokens: attendee.tokens - chargeAmount }
+          : attendee,
+      ),
+    );
+    setResult({
+      status: "success",
+      message: `ตัด Token จาก ${customer.name} แล้ว`,
+    });
     addLog(`ชำระเงินสำเร็จ: ${customer.name} จ่าย ${chargeAmount} Token`);
     setCustomerQr("");
   };
@@ -243,7 +373,9 @@ function StoreTokenScanSection({ attendees, setAttendees, addLog }) {
     <div className="flex h-full min-h-0 flex-col text-white">
       <header className="mb-4 shrink-0">
         <h2 className="text-2xl font-bold">สแกน QR TOKEN ของร้านค้า</h2>
-        <p className="mt-1 text-sm text-[#8fa6c2]">สแกน QR จากหน้า Profile ลูกค้าเพื่อตัด Token ให้กับร้านค้า</p>
+        <p className="mt-1 text-sm text-[#8fa6c2]">
+          สแกน QR จากหน้า Profile ลูกค้าเพื่อตัด Token ให้กับร้านค้า
+        </p>
       </header>
       <div className="grid min-h-0 flex-1 grid-cols-1 content-start gap-4 lg:grid-cols-[minmax(300px,0.95fr)_minmax(280px,0.8fr)]">
         <section className="flex flex-col rounded-2xl border border-[#244466] bg-[#10233d] p-4 sm:p-5">
@@ -258,25 +390,42 @@ function StoreTokenScanSection({ attendees, setAttendees, addLog }) {
               placeholder="ยิงหรือกรอกรหัส QR ลูกค้า เช่น TKT-001"
               className="w-full rounded-lg border border-[#244466] bg-[#0a1628] px-3 py-2.5 text-sm text-white outline-none placeholder:text-[#7188a5] focus:border-[#49a5fb]"
             />
-            <button type="submit" className="w-full rounded-lg bg-[#49a5fb] px-4 py-2.5 text-sm font-bold text-[#071426] hover:bg-[#368fdf]">
+            <button
+              type="submit"
+              className="w-full rounded-lg bg-[#49a5fb] px-4 py-2.5 text-sm font-bold text-[#071426] hover:bg-[#368fdf]"
+            >
               สแกนและตัด {chargeAmount} Token
             </button>
           </form>
         </section>
 
         {result ? (
-          <div className={`h-fit rounded-2xl border p-4 ${result.status === "success" ? "border-[#176848] bg-[#0d3028]" : "border-[#6b2b36] bg-[#351a27]"}`}>
-            <p className={`text-sm font-bold ${result.status === "success" ? "text-[#63e6ae]" : "text-[#f4a3b0]"}`}>
-              {result.status === "success" ? `✓ คุณได้รับ ${chargeAmount} Token` : "× สแกนไม่สำเร็จ"}
+          <div
+            className={`h-fit rounded-2xl border p-4 ${result.status === "success" ? "border-[#176848] bg-[#0d3028]" : "border-[#6b2b36] bg-[#351a27]"}`}
+          >
+            <p
+              className={`text-sm font-bold ${result.status === "success" ? "text-[#63e6ae]" : "text-[#f4a3b0]"}`}
+            >
+              {result.status === "success"
+                ? `✓ คุณได้รับ ${chargeAmount} Token`
+                : "× สแกนไม่สำเร็จ"}
             </p>
-            <p className="mt-2 text-sm font-semibold text-white">ร้านค้า แจ่มใส</p>
+            <p className="mt-2 text-sm font-semibold text-white">
+              ร้านค้า แจ่มใส
+            </p>
             <p className="mt-2 text-xs text-[#8fa6c2]">{result.message}</p>
           </div>
         ) : (
           <div className="h-fit rounded-2xl border border-[#176848] bg-[#0d3028] p-4">
-            <p className="text-sm font-bold text-[#63e6ae]">✓ พร้อมรับการชำระเงิน</p>
-            <p className="mt-2 text-sm font-semibold text-white">ร้านค้า แจ่มใส</p>
-            <p className="mt-2 text-xs text-[#8fa6c2]">สแกน QR ลูกค้าเพื่อรับ 50 Token</p>
+            <p className="text-sm font-bold text-[#63e6ae]">
+              ✓ พร้อมรับการชำระเงิน
+            </p>
+            <p className="mt-2 text-sm font-semibold text-white">
+              ร้านค้า แจ่มใส
+            </p>
+            <p className="mt-2 text-xs text-[#8fa6c2]">
+              สแกน QR ลูกค้าเพื่อรับ 50 Token
+            </p>
           </div>
         )}
       </div>
@@ -287,12 +436,16 @@ function StoreTokenScanSection({ attendees, setAttendees, addLog }) {
 // ==========================================
 // 3. หน้าตั้งราคาสินค้า (ProductPricingSection)
 // ==========================================
-function ProductPricingSection({ products, setProducts, addLog }) {
+function ProductPricingSection({
+  products,
+  setProducts,
+  addLog,
+}: ProductSectionProps) {
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
-  const [stock, setStock] = useState(50);
+  const [stock] = useState(50);
 
-  const handleAddProduct = (e) => {
+  const handleAddProduct = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!name.trim() || Number(price) <= 0) return;
 
@@ -308,17 +461,19 @@ function ProductPricingSection({ products, setProducts, addLog }) {
     setPrice("");
   };
 
-  const handleUpdatePrice = (id, newPrice) => {
+  const handleUpdatePrice = (id: string, newPrice: string) => {
     const val = Number(newPrice);
     if (val < 0) return;
     setProducts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, price: val } : p))
+      prev.map((p) => (p.id === id ? { ...p, price: val } : p)),
     );
   };
 
   return (
     <div className="bg-[#10233d] p-6 rounded-2xl shadow-sm border border-[#244466]">
-      <h2 className="text-xl font-bold mb-1">ตั้งราคาสินค้า & จัดการเมนูร้านค้า</h2>
+      <h2 className="text-xl font-bold mb-1">
+        ตั้งราคาสินค้า & จัดการเมนูร้านค้า
+      </h2>
       <p className="text-sm text-[#8fa6c2] mb-6">
         เพิ่มรายการสินค้าและกำหนดราคาเป็นหน่วย Token
       </p>
@@ -377,7 +532,9 @@ function ProductPricingSection({ products, setProducts, addLog }) {
                       type="number"
                       min="0"
                       value={product.price}
-                      onChange={(e) => handleUpdatePrice(product.id, e.target.value)}
+                      onChange={(e) =>
+                        handleUpdatePrice(product.id, e.target.value)
+                      }
                       className="w-24 px-2.5 py-1 border border-[#355779] rounded-lg font-semibold text-[#49a5fb]"
                     />
                     <span className="text-xs text-[#7188a5]">TK</span>
@@ -398,15 +555,20 @@ function ProductPricingSection({ products, setProducts, addLog }) {
 // ==========================================
 // 4. หน้าร้านค้า สแกน QR ลูกค้าตัดยอด (MerchantPosSection)
 // ==========================================
-function MerchantPosSection({ attendees, setAttendees, products, addLog }) {
-  const [cart, setCart] = useState({}); // { productId: qty }
+function MerchantPosSection({
+  attendees,
+  setAttendees,
+  products,
+  addLog,
+}: MerchantPosProps) {
+  const [cart, setCart] = useState<Record<string, number>>({}); // { productId: qty }
   const [customerQr, setCustomerQr] = useState("TKT-001");
 
-  const addToCart = (productId) => {
+  const addToCart = (productId: string) => {
     setCart((prev) => ({ ...prev, [productId]: (prev[productId] || 0) + 1 }));
   };
 
-  const removeFromCart = (productId) => {
+  const removeFromCart = (productId: string) => {
     setCart((prev) => {
       const next = { ...prev };
       if (next[productId] > 1) next[productId] -= 1;
@@ -422,7 +584,9 @@ function MerchantPosSection({ attendees, setAttendees, products, addLog }) {
 
   const handleCheckout = () => {
     if (totalTokens === 0) return;
-    const customer = attendees.find((a) => a.id === customerQr.trim().toUpperCase());
+    const customer = attendees.find(
+      (a) => a.id === customerQr.trim().toUpperCase(),
+    );
 
     if (!customer) {
       addLog(`ชำระเงินล้มเหลว: ไม่พบ QR ลูกค้า ${customerQr}`, "error");
@@ -432,7 +596,7 @@ function MerchantPosSection({ attendees, setAttendees, products, addLog }) {
     if (customer.tokens < totalTokens) {
       addLog(
         `ยอด Token ไม่พอ! ${customer.name} มี ${customer.tokens} TK (ต้องการ ${totalTokens} TK)`,
-        "error"
+        "error",
       );
       alert(`ยอด Token ของลูกค้าไม่เพียงพอ (คงเหลือ ${customer.tokens} TK)`);
       return;
@@ -441,13 +605,13 @@ function MerchantPosSection({ attendees, setAttendees, products, addLog }) {
     // ตัดยอด Token ลูกค้า
     setAttendees((prev) =>
       prev.map((a) =>
-        a.id === customer.id ? { ...a, tokens: a.tokens - totalTokens } : a
-      )
+        a.id === customer.id ? { ...a, tokens: a.tokens - totalTokens } : a,
+      ),
     );
     addLog(
       `ชำระเงินสำเร็จ: ${customer.name} จ่าย ${totalTokens} Token (คงเหลือ ${
         customer.tokens - totalTokens
-      } TK)`
+      } TK)`,
     );
     setCart({});
   };
@@ -469,7 +633,9 @@ function MerchantPosSection({ attendees, setAttendees, products, addLog }) {
             className="p-4 text-left border border-[#244466] rounded-xl hover:border-[#49a5fb] hover:bg-[#19395e]/40 transition"
           >
             <div className="font-semibold text-white">{product.name}</div>
-            <div className="text-[#49a5fb] font-bold mt-1">{product.price} TK</div>
+            <div className="text-[#49a5fb] font-bold mt-1">
+              {product.price} TK
+            </div>
           </button>
         ))}
       </div>
@@ -485,7 +651,10 @@ function MerchantPosSection({ attendees, setAttendees, products, addLog }) {
               const item = products.find((p) => p.id === id);
               if (!item) return null;
               return (
-                <div key={id} className="flex justify-between items-center text-sm">
+                <div
+                  key={id}
+                  className="flex justify-between items-center text-sm"
+                >
                   <span>
                     {item.name} x {qty}
                   </span>
@@ -512,7 +681,9 @@ function MerchantPosSection({ attendees, setAttendees, products, addLog }) {
 
       {/* ช่องสแกน QR ลูกค้าเพื่อจ่ายเงิน */}
       <div className="space-y-3">
-        <label className="block text-sm font-medium">สแกน QR Code ลูกค้าเพื่อรับชำระ</label>
+        <label className="block text-sm font-medium">
+          สแกน QR Code ลูกค้าเพื่อรับชำระ
+        </label>
         <div className="flex gap-2">
           <input
             type="text"
@@ -550,7 +721,15 @@ function MerchantPosSection({ attendees, setAttendees, products, addLog }) {
 // ==========================================
 // UI Component เสริม
 // ==========================================
-function TabButton({ active, onClick, label }) {
+function TabButton({
+  active,
+  onClick,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+}) {
   return (
     <button
       type="button"

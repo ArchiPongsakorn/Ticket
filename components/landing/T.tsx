@@ -1,6 +1,5 @@
 import s from "./landing.module.css";
 
-/** ภาพประกอบสไลด์เสื้อ: เสื้อยืดเส้นเรียบบนแผ่นกลม */
 export default function ArtTee() {
   return (
     <div className={s.art} aria-hidden="true">

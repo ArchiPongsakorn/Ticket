@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState, type CSSProperties } from "react";
@@ -54,6 +53,7 @@ export default function Home() {
       ) {
         setRole(user.role);
 
+        // 1-HOME
         // หน้าแรกของแต่ละ Role
         if (user.role === "staff") {
           setActivePage("Token");
@@ -85,25 +85,27 @@ export default function Home() {
     logoutLocalUser();
     window.location.replace("/login");
   };
-
+  //2  PAGE-TRUE
   // จำกัดหน้า Staff และ Merchant
   const currentPage =
-    role === "staff" &&
-    !["Token", "scan-qr"].includes(activePage)
+    //staff true & false ///// true & true = Token
+    role === "staff" && !["Token", "scan-qr"].includes(activePage)
       ? "Token"
-      : role === "merchant" &&
-          !["shop", "scan-qr-shop"].includes(activePage)
+      : role === "merchant" && !["shop", "scan-qr-shop"].includes(activePage)
         ? "shop"
         : activePage;
 
   // เมนูสำหรับ Staff และ Merchant
+  //3-ROLE-MENU
   const limitedMenus =
     role === "staff"
-      ? [
+      ? //TURE
+        [
           { id: "Token", label: "เติม Token" },
           { id: "scan-qr", label: "สแกน QR CODE เข้างาน" },
         ]
-      : [
+      : //FALSE
+        [
           { id: "shop", label: "ร้านค้า" },
           { id: "scan-qr-shop", label: "สแกน QR ตัด Token" },
         ];
@@ -123,7 +125,7 @@ export default function Home() {
     content = <UserManagementContent />;
   } else if (
     ["Token", "scan-qr", "pricing", "shop", "scan-qr-shop"].includes(
-      currentPage
+      currentPage,
     )
   ) {
     const section:
@@ -154,11 +156,7 @@ export default function Home() {
   }
 
   const roleName =
-    role === "admin"
-      ? "Admin"
-      : role === "staff"
-        ? "Staff"
-        : "Merchant";
+    role === "admin" ? "Admin" : role === "staff" ? "Staff" : "Merchant";
 
   const roleDescription =
     role === "admin"
@@ -173,7 +171,6 @@ export default function Home() {
       style={{ "--sidebar-width": "220px" } as CSSProperties}
     >
       <Sidebar className="border-r border-[#263c57] bg-[#0F2038] px-3.75 py-5.5">
-
         {/* Logo */}
         <div className="flex items-center gap-2.5 px-1.25">
           <div className="size-7.5 rounded-lg bg-[#49a5fb]" />
@@ -186,12 +183,8 @@ export default function Home() {
         <SidebarContent className="mt-10 overflow-hidden px-0">
           <SidebarGroup className="px-0">
             <SidebarGroupContent>
-
               {role === "admin" ? (
-                <AdminMenu
-                  activePage={currentPage}
-                  onSelect={setActivePage}
-                />
+                <AdminMenu activePage={currentPage} onSelect={setActivePage} />
               ) : (
                 <div className="flex flex-col gap-2">
                   {limitedMenus.map((menu) => (
@@ -210,7 +203,6 @@ export default function Home() {
                   ))}
                 </div>
               )}
-
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
@@ -218,9 +210,7 @@ export default function Home() {
         {/* Profile */}
         <div className="mt-auto flex w-full items-center gap-3 px-1.25">
           <Avatar className="shrink-0" size="md">
-            <AvatarFallback>
-              {roleName.charAt(0)}
-            </AvatarFallback>
+            <AvatarFallback>{roleName.charAt(0)}</AvatarFallback>
             <AvatarBadge status="online" size="lg" ping />
           </Avatar>
 
@@ -228,17 +218,13 @@ export default function Home() {
             <p className="truncate text-sm font-semibold text-white">
               {roleName}
             </p>
-            <p className="truncate text-xs text-[#8fa6c2]">
-              {roleDescription}
-            </p>
+            <p className="truncate text-xs text-[#8fa6c2]">{roleDescription}</p>
           </div>
         </div>
       </Sidebar>
 
       {/* Main Content */}
-      <main className="min-h-full min-w-0 flex-1">
-        {content}
-      </main>
+      <main className="min-h-full min-w-0 flex-1">{content}</main>
 
       {/* Logout มุมขวาล่าง */}
       <button
@@ -257,7 +243,6 @@ export default function Home() {
         <LogOut size={18} />
         ออกจากระบบ
       </button>
-
     </SidebarProvider>
   );
 }

@@ -157,7 +157,7 @@
   }
 }
 
-/* เสื้อบนแผ่นกลม */
+/* เสื้อ */
 .plate {
   position: relative;
   width: clamp(130px, 17vw, 180px);
@@ -179,7 +179,6 @@
   stroke-linejoin: round;
 }
 
-/* ป้ายแท็กราคา: เชือกโค้งขึ้นไปทางขวา ปักที่ตัวสินค้าด้วย --x --y */
 
 .arrow {
   position: absolute;
@@ -265,6 +264,7 @@
 }
 
 /* แถบสีฟ้าที่กำลังวิ่ง */
+/* BLUE-DOT */
 .dotFill {
   display: block;
   width: 100%;
@@ -276,6 +276,7 @@
 }
 
 /* Animation สีฟ้าจากซ้ายไปขวา */
+/* กำหนด ก เริ่ม 0 - 100 */
 @keyframes dotProgress {
   from {
     transform: scaleX(0);
