@@ -45,26 +45,26 @@ export default function ReportContent() {
           <div className="rounded-2xl border border-[#244466] bg-[#10233d] p-4">
             <p className="text-sm text-[#8fa6c2]">ยอดขายรวม (Token)</p>
             <p className="mt-3 text-2xl font-bold text-[#a887ff]">
-              [{totalStoreSales}]
+              {totalStoreSales}
             </p>
           </div>
           <div className="rounded-2xl border border-[#244466] bg-[#10233d] p-4">
             <p className="text-sm text-[#8fa6c2]">ยอดขายบัตรและเสื้อ (บาท)</p>
             <p className="mt-3 text-2xl font-bold text-[#4da6ff]">
-              [{totalProductSales}]
+              {totalProductSales}
             </p>
           </div>
           <div className="rounded-2xl border border-[#244466] bg-[#10233d] p-4">
             <p className="text-sm text-[#8fa6c2]">ค่าใช้จ่ายผู้เข้าร่วม (Token)</p>
             <p className="mt-3 text-2xl font-bold text-[#35d6c0]">
-              [{totalStoreSales}]
+              {totalStoreSales}
             </p>
           </div>
         </section>
 
         <section className="mt-5 overflow-hidden rounded-2xl border border-[#244466] bg-[#10233d] p-3 sm:p-4">
           <div className="overflow-x-auto">
-            <TableRoot className="w-full min-w-[620px] border-[#244466] text-left text-sm">
+            <TableRoot className="w-full min-w-155 border-[#244466] text-left text-sm">
               <TableHeader>
                 <TableRow className="border-b border-[#244466] text-[#8fa6c2]">
                   <TableHead className="px-2 pb-3 font-normal">ร้านค้า</TableHead>
