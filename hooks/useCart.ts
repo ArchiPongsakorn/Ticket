@@ -1,23 +1,23 @@
 "use client";
-import type { CartLine } from "../types/domain";
+import type { CartLine, Product } from "../types/domain";
 import { useCallback, useMemo } from "react";
 import { usePersistentState } from "./usePersistentState";
 import { PRODUCTS_BY_ID } from "../data/catalog";
 import { lineKey, summarize } from "../lib/cart";
 
 /** ตะกร้าสินค้า(ซื้ออย่างใดอย่างหนึ่งได้) */
-export function useCart() {
+export function useCart(productsById: Record<string, Product> = PRODUCTS_BY_ID) {
   //ใช้ use จัดการข้อมูล key  
   const [stored, setStored] = usePersistentState<CartLine[]> ("ticket-cart", []);
 
   const lines = useMemo(
-    () => stored.filter((l) => PRODUCTS_BY_ID[l.id] && l.qty > 0),
-    [stored],
+    () => stored.filter((l) => productsById[l.id] && l.qty > 0),
+    [stored, productsById],
   );
 
   const add = useCallback(
     (id: string, option = "") => {
-      const max = PRODUCTS_BY_ID[id].max;
+      const max = productsById[id].max;
       setStored((prev) => {
         //
         //find id 
@@ -31,7 +31,7 @@ export function useCart() {
         );
       });
     },
-    [setStored],
+    [productsById, setStored],
   );
 
   const changeQty = useCallback(
@@ -40,13 +40,13 @@ export function useCart() {
         prev
           .map((l) =>
             lineKey(l) === key
-              ? { ...l, qty: Math.min(PRODUCTS_BY_ID[l.id].max, l.qty + delta) }
+              ? { ...l, qty: Math.min(productsById[l.id].max, l.qty + delta) }
               : l,
           )
           .filter((l) => l.qty > 0),
       );
     },
-    [setStored],
+    [productsById, setStored],
   );
 
   const remove = useCallback(
@@ -63,6 +63,6 @@ export function useCart() {
     remove,
     clear,
     
-    totals: useMemo(() => summarize(lines), [lines]),
+    totals: useMemo(() => summarize(lines, productsById), [lines, productsById]),
   };
 }

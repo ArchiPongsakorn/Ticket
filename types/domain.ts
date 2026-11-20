@@ -8,6 +8,7 @@ export interface Product {
   desc: string;
   price: number;
   glyph: string;
+  image?: string;
   max: number;
   was?: number;
   tokens?: number;

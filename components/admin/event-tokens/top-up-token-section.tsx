@@ -2,6 +2,7 @@
 
 import { useState, type ChangeEvent, type Dispatch, type FormEvent, type SetStateAction } from "react";
 import type { ActivityLog, AddLog, Attendee } from "./types";
+import { usePersistentState } from "@/hooks/usePersistentState";
 
 type TopUpTokenSectionProps = {
   attendees: Attendee[];
@@ -11,8 +12,8 @@ type TopUpTokenSectionProps = {
 };
 
 export default function TopUpTokenSection({ attendees, setAttendees, addLog, logs }: TopUpTokenSectionProps) {
-  const [qrInput, setQrInput] = useState("TKT-001");
-  const [amount, setAmount] = useState<number | string>(100);
+  const [qrInput, setQrInput] = usePersistentState("admin-token-topup-qr", "TKT-001");
+  const [amount, setAmount] = usePersistentState<number | string>("admin-token-topup-amount", 100);
   const presetAmounts = [50, 100, 200, 500];
   const selectedAttendee = attendees.find(
     (attendee) => attendee.id === qrInput.trim().toUpperCase()
@@ -23,7 +24,7 @@ export default function TopUpTokenSection({ attendees, setAttendees, addLog, log
     event.preventDefault();
     const target = attendees.find((attendee) => attendee.id === qrInput.trim().toUpperCase());
     if (!target) {
-      addLog(`ไม่พบรหัส QR: ${qrInput}`, "error");
+      addLog(`ไม่พบรหัส QR: ${qrInput}`, "error", "เติม Token");
       return;
     }
     const numericAmount = Number(amount);
@@ -35,7 +36,7 @@ export default function TopUpTokenSection({ attendees, setAttendees, addLog, log
         : attendee
       )
     );
-    addLog(`เติม ${numericAmount} Token ให้ ${target.name} (${target.id}) สำเร็จ`);
+    addLog(`เติม ${numericAmount} Token ให้ ${target.name} (${target.id}) สำเร็จ`, "info", "เติม Token");
   };
 
   return (

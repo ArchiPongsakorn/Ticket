@@ -27,6 +27,9 @@ export default function ShopGuard({
         setAllowed(false);
         sessionStorage.setItem("ticket:returnTo", "/shop");
         router.replace("/login");
+      } else if (user.role !== "user") {
+        setAllowed(false);
+        router.replace("/admin");
       } else {
         setAllowed(true);
       }

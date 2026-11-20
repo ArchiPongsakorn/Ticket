@@ -1,15 +1,18 @@
 import ProductCard from "./Card";
-import { CATALOG, GROUPS } from "../../data/catalog";
+import { GROUPS } from "../../data/catalog";
+import type { Product } from "../../types/domain";
 import s from "./shop.module.css";
 
 /** รายการสินค้าแยกกลุ่ม: บัตรเข้างาน / ของที่ระลึก */
 export default function ProductCatalog({
   picked,
+  products,
   onPick,
   onAdd,
   onSizeGuide,
 }: {
   picked: Record<string, string>;
+  products: Product[];
   onPick: (id: string, option: string) => void;
   onAdd: (id: string) => void;
   onSizeGuide: () => void;
@@ -28,7 +31,7 @@ export default function ProductCatalog({
           <p className={s.groupSub}>{g.sub}</p>
           <div className={s.grid}>
             {/* fil - array  */}
-            {CATALOG.filter((p) => p.type === g.type).map((p) => (
+            {products.filter((p) => p.type === g.type).map((p) => (
               <ProductCard
                 key={p.id}
                 product={p}

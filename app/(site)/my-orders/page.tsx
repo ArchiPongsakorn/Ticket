@@ -3,13 +3,17 @@
 import { useEffect, useState, type ChangeEvent } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import Header from "@/components/layout/Header";
+import { usePersistentState } from "@/hooks/usePersistentState";
+import { CUSTOMER_ORDERS_STORAGE_KEY } from "@/lib/api";
+import { readJSON } from "@/lib/storage";
+import { getCurrentUser, type AuthUser } from "@/lib/local-auth";
 
 // ====== ตั้งค่าบัญชีรับเงิน PromptPay ======
 // ใส่เบอร์โทร (เช่น 0812345678) หรือเลขบัตรประชาชน/เลขนิติบุคคล 13 หลัก
 const PROMPTPAY_ID = "0812345678";
 const RECEIVER_NAME = "ชื่อบัญชีผู้รับเงิน";
 
-type Status = "paid" | "pending" | "review";
+type Status = "paid" | "pending" | "review" | "rejected";
 
 type Order = {
   id: string;
@@ -21,42 +25,47 @@ type Order = {
   bonusToken: number;
   status: Status;
   orderedAt: string;
+  ownerEmail?: string;
+  buyerName?: string;
+  slipUrl?: string;
+  reason?: string;
 };
 
 // ข้อมูลตัวอย่าง — เปลี่ยนเป็นข้อมูลจริงจาก API / DB ได้เลย
 // (ตั้งเป็น [] ถ้าอยากดูหน้าแบบยังไม่มีออเดอร์)
-const initialOrders: Order[] = [
-  {
-    id: "ORD-20261120-0003",
-    event: "งานเลี้ยงรุ่น SPU",
-    tier: "PLUS",
-    date: "20 ธ.ค. 2569 · มหาวิทยาลัยศรีปทุม",
-    qty: 1,
-    total: 1500,
-    bonusToken: 300,
-    status: "paid",
-    orderedAt: "18 พ.ย. 2569 · 14:32",
-  },
-  {
-    id: "ORD-20261119-0002",
-    event: "งานเลี้ยงรุ่น SPU",
-    tier: "STANDARD",
-    date: "20 ธ.ค. 2569 · มหาวิทยาลัยศรีปทุม",
-    qty: 2,
-    total: 1600,
-    bonusToken: 0,
-    status: "pending",
-    orderedAt: "19 พ.ย. 2569 · 21:05",
-  },
-];
+const initialOrders: Order[] = [];
 
 const statusLabel: Record<Status, string> = {
   paid: "ชำระแล้ว",
   pending: "รอชำระเงิน",
   review: "รอตรวจสอบสลิป",
+  rejected: "ไม่อนุมัติ",
 };
 
+const removedTestOrderIds = new Set(["MF480828", "MF132083", "MF179791", "MF012305", "MF350636"]);
+
 const MAX_SLIP_MB = 5;
+
+async function compressSlip(file: File): Promise<string> {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, 1200 / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("อ่านไฟล์ภาพไม่สำเร็จ");
+  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+  const blob = await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((value) => value ? resolve(value) : reject(new Error("แปลงรูปสลิปไม่สำเร็จ")), "image/jpeg", 0.68);
+  });
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("อ่านรูปสลิปไม่สำเร็จ"));
+    reader.onerror = () => reject(new Error("อ่านรูปสลิปไม่สำเร็จ"));
+    reader.readAsDataURL(blob);
+  });
+}
 
 const tabs: { key: "all" | Status; label: string }[] = [
   { key: "all", label: "ทั้งหมด" },
@@ -105,12 +114,50 @@ function promptPayPayload(target: string, amount: number) {
 }
 
 export default function MyOrdersPage() {
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
+  const [orders, setOrders, ordersReady] = usePersistentState<Order[]>(CUSTOMER_ORDERS_STORAGE_KEY, initialOrders);
   const [tab, setTab] = useState<"all" | Status>("all");
   const [payingId, setPayingId] = useState<string | null>(null);
   const [slipFile, setSlipFile] = useState<File | null>(null);
   const [slipPreview, setSlipPreview] = useState<string | null>(null);
   const [slipError, setSlipError] = useState("");
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
+
+  useEffect(() => {
+    if (!ordersReady) return;
+    const cleanedOrders = orders.filter((order) => !removedTestOrderIds.has(order.id));
+    if (cleanedOrders.length !== orders.length) setOrders(cleanedOrders);
+  }, [orders, ordersReady, setOrders]);
+
+  useEffect(() => {
+    const syncUser = () => setCurrentUser(getCurrentUser());
+    syncUser();
+    window.addEventListener("ticket:auth-changed", syncUser);
+    window.addEventListener("storage", syncUser);
+    return () => {
+      window.removeEventListener("ticket:auth-changed", syncUser);
+      window.removeEventListener("storage", syncUser);
+    };
+  }, []);
+
+  useEffect(() => {
+    const orderNo = new URLSearchParams(window.location.search).get("pay");
+    if (!orderNo) return;
+    const storedOrders = readJSON<Order[]>(CUSTOMER_ORDERS_STORAGE_KEY, initialOrders);
+    setOrders(storedOrders);
+    if (storedOrders.some((order) => order.id === orderNo && order.status === "pending")) {
+      setPayingId(orderNo);
+    }
+  }, [setOrders]);
+
+  useEffect(() => {
+    const refreshOrders = (event: StorageEvent) => {
+      if (event.key === CUSTOMER_ORDERS_STORAGE_KEY) {
+        setOrders(readJSON<Order[]>(CUSTOMER_ORDERS_STORAGE_KEY, initialOrders));
+      }
+    };
+    window.addEventListener("storage", refreshOrders);
+    return () => window.removeEventListener("storage", refreshOrders);
+  }, [setOrders]);
 
   // คืนหน่วยความจำของรูปตัวอย่างเมื่อเปลี่ยนรูปหรือปิดหน้าต่าง
   useEffect(() => {
@@ -119,8 +166,11 @@ export default function MyOrdersPage() {
     };
   }, [slipPreview]);
 
-  const list = tab === "all" ? orders : orders.filter((o) => o.status === tab);
-  const paying = orders.find((o) => o.id === payingId) ?? null;
+  const userOrders = currentUser
+    ? orders.filter((order) => order.ownerEmail === currentUser.email && !removedTestOrderIds.has(order.id))
+    : orders.filter((order) => !removedTestOrderIds.has(order.id));
+  const list = tab === "all" ? userOrders : userOrders.filter((o) => o.status === tab);
+  const paying = userOrders.find((o) => o.id === payingId) ?? null;
 
   const closePay = () => {
     setPayingId(null);
@@ -154,15 +204,22 @@ export default function MyOrdersPage() {
   // โหมดตัวอย่าง: สถานะเปลี่ยนในหน้านี้เท่านั้น
   // ของจริงต้องส่งสลิปไปเซิร์ฟเวอร์ (FormData -> POST /api/orders/:id/slip)
   // แล้วให้เจ้าหน้าที่หรือระบบตรวจสอบ ก่อนเปลี่ยนสถานะเป็น paid
-  const submitSlip = () => {
+  const submitSlip = async () => {
     if (!paying) return;
     if (!slipFile) {
       setSlipError("แนบสลิปก่อนยืนยัน");
       return;
     }
-    setOrders((prev) =>
-      prev.map((o) => (o.id === paying.id ? { ...o, status: "review" } : o))
-    );
+    try {
+      const slipUrl = await compressSlip(slipFile);
+      setOrders((prev) =>
+        prev.map((o) => (o.id === paying.id ? { ...o, status: "review", slipUrl } : o))
+      );
+      window.dispatchEvent(new Event("ticket:orders-updated"));
+    } catch (error) {
+      setSlipError(error instanceof Error ? error.message : "บันทึกสลิปไม่สำเร็จ");
+      return;
+    }
     closePay();
     setTab("review");
   };

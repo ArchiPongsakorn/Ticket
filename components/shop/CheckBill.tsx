@@ -5,11 +5,11 @@ import type {
   OrderUnit,
   AttendeesByUnit,
   CheckoutResult,
+  Product,
 } from "../../types/domain";
 
 import { useEffect, useState } from "react";
 import Modal from "../ui/Modal";
-import { PRODUCTS_BY_ID } from "../../data/catalog";
 import { createOrder } from "../../lib/api";
 import { baht, num } from "../../lib/format";
 import s from "./shop.module.css";
@@ -18,14 +18,15 @@ const METHOD_LABEL: Record<
   import("../../types/domain").DeliveryMethod,
   string
 > = { pickup: "รับที่งาน", delivery: "จัดส่ง" };
-const pieceName = (u: OrderUnit) =>
-  `${PRODUCTS_BY_ID[u.id].name}${u.option ? ` (${u.option})` : ""}`;
+const pieceName = (u: OrderUnit, productsById: Record<string, Product>) =>
+  `${productsById[u.id].name}${u.option ? ` (${u.option})` : ""}`;
 
 /** ขั้นที่ 3: ตรวจสอบคำสั่งซื้อ เลือกวิธีชำระเงิน แล้วแสดงผลสำเร็จ */
 export default function CheckoutDialog({
   open,
   onClose,
   lines,
+  productsById,
   totals,
   units,
   attendees,
@@ -35,11 +36,12 @@ export default function CheckoutDialog({
   open: boolean;
   onClose: () => void;
   lines: CartLine[];
+  productsById: Record<string, Product>;
   totals: CartTotals;
   units: OrderUnit[];
   attendees: AttendeesByUnit;
   shipping: number;
-  onSuccess: () => void;
+  onSuccess: (orderNo: string) => void;
 }) {
   const [pay, setPay] = useState("promptpay");
   const [busy, setBusy] = useState(false);
@@ -68,6 +70,7 @@ export default function CheckoutDialog({
       })),
       pay,
       total: totals.total + shipping,
+        prices: Object.fromEntries(lines.map((line) => [line.id, productsById[line.id].price])),
     });
     setOrder({
       no: result.orderNo,
@@ -77,7 +80,7 @@ export default function CheckoutDialog({
       email: attendees[pieces[0]?.key ?? ""]?.email,
     });
     setBusy(false);
-    onSuccess(); // ล้างตะกร้าและข้อมูลที่กรอก
+    onSuccess(result.orderNo);
   }
 
   return (
@@ -116,7 +119,7 @@ export default function CheckoutDialog({
             <h2 id="dlgTitle">ตรวจสอบคำสั่งซื้อ</h2>
             <ul className={s.dlgList}>
               {lines.map((l) => {
-                const p = PRODUCTS_BY_ID[l.id];
+                const p = productsById[l.id];
                 return (
                   <li key={`${l.id}-${l.option}`}>
                     <span>
@@ -158,7 +161,7 @@ export default function CheckoutDialog({
                     return (
                       <li key={u.key}>
                         <span>
-                          {pieceName(u)}: {d.name}
+                          {pieceName(u, productsById)}: {d.name}
                           {methodOf(u) === "delivery" && d.addr
                             ? ` | ${d.addr}`
                             : ""}
@@ -182,7 +185,7 @@ export default function CheckoutDialog({
                   {tickets.map((u) => (
                     <li key={u.key}>
                       <span>
-                        {PRODUCTS_BY_ID[u.id].name}: {attendees[u.key]?.first}{" "}
+                        {productsById[u.id].name}: {attendees[u.key]?.first}{" "}
                         {attendees[u.key]?.last}
                       </span>
                       <span>{attendees[u.key]?.email}</span>

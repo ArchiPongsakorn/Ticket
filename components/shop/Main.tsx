@@ -17,6 +17,7 @@ import AttendeeSection from "./OrderForm";
 import CheckoutDialog from "./CheckBill";
 import SizeGuideDialog from "./Table-Size";
 import { useCart } from "../../hooks/useCart";
+import useCatalogPrices from "../../hooks/useCatalogPrices";
 import { orderUnits } from "../../lib/cart";
 import { baht } from "../../lib/format";
 import { cx } from "../../lib/cx";
@@ -35,7 +36,8 @@ const STEPS = ["เลือกสินค้า", "ข้อมูลการ
  */
 export default function ShopClient() {
   const router = useRouter();
-  const cart = useCart();
+  const { products, productsById } = useCatalogPrices();
+  const cart = useCart(productsById);
   const [picked, setPicked] = useState(defaultPicks);
   const [step, setStep] = useState(1);
   const [attendees, setAttendees] = useState<AttendeesByUnit>({}); // เก็บข้อมูลที่ผู้ใช้กรอกในฟอร์ม att=fil_pro set=update
@@ -46,7 +48,7 @@ export default function ShopClient() {
   const [sizeOpen, setSizeOpen] = useState(false); //ตาราง
 
   const { lines, totals } = cart;
-  const units = useMemo(() => orderUnits(lines), [lines]);
+  const units = useMemo(() => orderUnits(lines, productsById), [lines, productsById]);
   const deliveryCount = units.filter(
     (u) => u.kind === "merch" && attendees[u.key]?.method === "delivery",
   ).length;
@@ -105,10 +107,12 @@ export default function ShopClient() {
     setCheckoutOpen(false);
     setStep(lines.length ? 2 : 1);
   };
-  const finishOrder = () => {
+  const finishOrder = (orderNo: string) => {
     cart.clear();
     setAttendees({});
     setErrors({});
+    setCheckoutOpen(false);
+    router.push(`/my-orders?pay=${encodeURIComponent(orderNo)}`);
   };
 
   return (
@@ -150,6 +154,7 @@ export default function ShopClient() {
           <div className={s.layout}>
             <ProductCatalog
               picked={picked}
+              products={products}
               onPick={(id, option) =>
                 setPicked((p) => ({ ...p, [id]: option }))
               }
@@ -159,11 +164,12 @@ export default function ShopClient() {
 
               //add product
               //user click 
-              onAdd={(id) => cart.add(id, picked[id] || "")}
+              onAdd={(id) => cart.add(id, picked[id] || productsById[id]?.options?.[0] || "")}
               onSizeGuide={() => setSizeOpen(true)}
             />
             <CartPanel
               lines={lines}
+              productsById={productsById}
               totals={totals}
               onQty={cart.changeQty}
               onRemove={cart.remove}
@@ -174,6 +180,7 @@ export default function ShopClient() {
           <section className={s.attend} aria-label="ข้อมูลการสั่งซื้อ">
             <AttendeeSection
               units={units}
+              productsById={productsById}
               attendees={attendees}
               errors={errors}
               onChange={changeField}
@@ -214,6 +221,7 @@ export default function ShopClient() {
         open={checkoutOpen}
         onClose={closeCheckout}
         lines={lines}
+        productsById={productsById}
         totals={totals}
         units={units}
         attendees={attendees}

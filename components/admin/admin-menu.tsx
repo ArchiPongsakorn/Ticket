@@ -12,7 +12,7 @@ export const menuItems = [
   { id: "users", label: "จัดการ User" },
   { id: "Admintoken", label: "เติม Token" },
   { id: "qrevent", label: "สแกน QR CODE เข้างาน" },
-  { id: "PriceAdmin", label: "ตั้งราคา" },
+  { id: "PriceAdmin", label: "แก้ไขสินค้า" },
   { id: "Shop", label: "จัดการร้านค้า" },
   { id: "report", label: "Report" },
   { id: "audit-log", label: "Audit Log" },

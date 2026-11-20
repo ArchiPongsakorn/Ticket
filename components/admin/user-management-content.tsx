@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import dashboardData from "@/data/admin/dashboard.json";
-import { Badge } from "@/components/admin/tailgrids/core/badge";
+import { useEffect, useState } from "react";
+import { CATALOG } from "@/data/catalog";
+import { CUSTOMER_ORDERS_STORAGE_KEY, type CustomerOrder } from "@/lib/api";
+import { ACCOUNT_STORAGE_KEY, deleteRegisteredUser } from "@/lib/local-auth";
+import { readJSON, writeJSON } from "@/lib/storage";
+import { recordAudit } from "@/lib/audit-log";
 import {
   TableBody,
   TableCell,
@@ -12,16 +15,90 @@ import {
   TableRow,
 } from "@/components/admin/tailgrids/core/table";
 
-const statusStyles = {
-  "อนุมัติแล้ว": "bg-[#064e3b] text-[#63e6ae]",
-  "รอตรวจสอบ": "bg-[#5b4300] text-[#ffd166]",
-  "ไม่อนุมัติ": "bg-[#4c1d1d] text-[#fca5a5]",
+type ManagedUser = {
+  name: string;
+  email: string;
+  ticket: number;
+  shirt: number;
+  token: number;
 };
 
+type StoredAccount = { username: string; email: string; role: string };
+const DELETED_USERS_KEY = "admin-users-deleted-emails";
+
+function orderItemCounts(order: CustomerOrder) {
+  if (order.items) {
+    return order.items.reduce((counts, item) => {
+      counts[item.type] += item.qty;
+      return counts;
+    }, { ticket: 0, merch: 0 });
+  }
+
+  return order.tier.split(" · ").reduce((counts, part) => {
+    const product = CATALOG.find((candidate) => part.includes(candidate.name));
+    const qty = Number(part.match(/×\\s*(\\d+)/)?.[1] ?? 0);
+    if (product?.type === "ticket") counts.ticket += qty;
+    if (product?.type === "merch") counts.merch += qty;
+    return counts;
+  }, { ticket: order.tickets?.length ?? 0, merch: 0 });
+}
+
 export default function UserManagementContent() {
-  const [users, setUsers] = useState(() => dashboardData.users);
+  const [users, setUsers] = useState<ManagedUser[]>([]);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+
+  useEffect(() => {
+    const refreshUsers = () => {
+      const accounts = readJSON<StoredAccount[]>(ACCOUNT_STORAGE_KEY, []).filter((account) => account.role === "user");
+      const customerOrders = readJSON<CustomerOrder[]>(CUSTOMER_ORDERS_STORAGE_KEY, []);
+      const attendees = readJSON<Array<{ name: string; email?: string; ownerEmail?: string; tokens?: number }>>("admin-event-attendees", []);
+      const deletedEmails = new Set(readJSON<string[]>(DELETED_USERS_KEY, []).map((email) => email.toLowerCase()));
+      const usersByEmail = new Map<string, ManagedUser>();
+
+      accounts.forEach((account) => {
+        const email = account.email.toLowerCase();
+        usersByEmail.set(email, { name: account.username, email: account.email, ticket: 0, shirt: 0, token: 0 });
+      });
+
+      const latestOrderApplied = new Set<string>();
+      customerOrders.forEach((order) => {
+        const email = (order.ownerEmail || order.tickets?.find((ticket) => ticket.email)?.email || "").toLowerCase();
+        if (!email) return;
+        const user = usersByEmail.get(email) ?? {
+          name: order.buyerName || order.tickets?.[0]?.name || email,
+          email,
+          ticket: 0,
+          shirt: 0,
+          token: 0,
+        };
+        const counts = orderItemCounts(order);
+        user.ticket += counts.ticket;
+        user.shirt += counts.merch;
+        if (!latestOrderApplied.has(email)) {
+          user.name = order.tickets?.find((ticket) => ticket.name)?.name || order.buyerName || user.name;
+          latestOrderApplied.add(email);
+        }
+        usersByEmail.set(email, user);
+      });
+
+      attendees.forEach((attendee) => {
+        const email = (attendee.ownerEmail || attendee.email || "").toLowerCase();
+        const user = usersByEmail.get(email);
+        if (user) user.token += Number(attendee.tokens ?? 0);
+      });
+
+      setUsers([...usersByEmail.values()].filter((user) => !deletedEmails.has(user.email.toLowerCase())));
+    };
+    refreshUsers();
+    window.addEventListener("storage", refreshUsers);
+    window.addEventListener("ticket:orders-updated", refreshUsers);
+    window.addEventListener("ticket:auth-changed", refreshUsers);
+    return () => {
+      window.removeEventListener("storage", refreshUsers);
+      window.removeEventListener("ticket:orders-updated", refreshUsers);
+      window.removeEventListener("ticket:auth-changed", refreshUsers);
+    };
+  }, []);
 
   const filteredUsers = users.filter((user) => {
     const searchText = search.trim().toLowerCase();
@@ -30,19 +107,33 @@ export default function UserManagementContent() {
       user.name.toLowerCase().includes(searchText) ||
       user.email.toLowerCase().includes(searchText);
 
-    const matchesStatus =
-      statusFilter === "all" ||
-      (statusFilter === "pending" && user.status === "รอตรวจสอบ") ||
-      (statusFilter === "approved" && user.status === "อนุมัติแล้ว") ||
-      (statusFilter === "rejected" && user.status === "ไม่อนุมัติ");
-
-    return matchesSearch && matchesStatus;
+    return matchesSearch;
   });
+
+  const exportCsv = () => {
+    const rows = [
+      ["ชื่อ-นามสกุล", "อีเมล", "บัตร", "เสื้อ", "Token"],
+      ...filteredUsers.map((user) => [user.name, user.email, user.ticket, user.shirt, user.token]),
+    ];
+    const csv = "\uFEFF" + rows
+      .map((row) => row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(","))
+      .join("\r\n");
+    const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `users-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   const handleDeleteUser = (email: string, name: string) => {
     if (!window.confirm(`ต้องการลบผู้ใช้ ${name} ใช่หรือไม่?`)) return;
 
+    deleteRegisteredUser(email);
+    const deletedEmails = readJSON<string[]>(DELETED_USERS_KEY, []);
+    writeJSON(DELETED_USERS_KEY, [...new Set([...deletedEmails, email.toLowerCase()])]);
     setUsers((previous) => previous.filter((user) => user.email !== email));
+    recordAudit("ลบผู้ใช้", `${name} (${email})`);
   };
 
   return (
@@ -55,13 +146,14 @@ export default function UserManagementContent() {
           </div>
           <button
             type="button"
-            className="rounded-xl border border-[#49a5fb] px-4 py-2.5 text-sm font-semibold text-[#49a5fb] hover:bg-[#19395e]"
+            onClick={exportCsv}
+            className="rounded-xl bg-[#49a5fb] px-4 py-2.5 text-sm font-semibold text-[#071426] transition hover:bg-[#368fdf]"
           >
-          Export CSV
+            Export CSV ({filteredUsers.length})
           </button>
         </div>
 
-        <section className="mt-6 grid gap-4 md:grid-cols-[minmax(0,4fr)_minmax(180px,1fr)]">
+        <section className="mt-6 grid gap-4">
           <label className="text-sm text-[#d6e0ed]">
             ค้นหา
             <input
@@ -71,19 +163,6 @@ export default function UserManagementContent() {
               onChange={(event) => setSearch(event.target.value)}
               className="mt-2 w-full rounded-xl border border-[#244466] bg-[#10233d] px-3 py-3 text-sm text-white outline-none placeholder:text-[#7188a5]"
             />
-          </label>
-          <label className="text-sm text-[#d6e0ed]">
-            สถานะ
-            <select
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value)}
-              className="mt-2 w-full rounded-xl border border-[#244466] bg-[#10233d] px-3 py-3 text-sm text-white outline-none"
-            >
-              <option value="all">ทั้งหมด</option>
-              <option value="pending">รอตรวจสอบ</option>
-              <option value="approved">อนุมัติแล้ว</option>
-              <option value="rejected">ไม่อนุมัติ</option>
-            </select>
           </label>
         </section>
 
@@ -97,7 +176,6 @@ export default function UserManagementContent() {
                   <TableHead className="px-2 pb-3 font-normal">บัตร</TableHead>
                   <TableHead className="px-2 pb-3 font-normal">เสื้อ</TableHead>
                   <TableHead className="px-2 pb-3 font-normal">Token</TableHead>
-                  <TableHead className="px-2 pb-3 font-normal">สถานะ</TableHead>
                   <TableHead className="px-2 pb-3 text-right font-normal"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -112,15 +190,6 @@ export default function UserManagementContent() {
                     <TableCell className="px-2 py-3 text-[#d6e0ed]">{user.ticket}</TableCell>
                     <TableCell className="px-2 py-3 text-[#d6e0ed]">{user.shirt}</TableCell>
                     <TableCell className="px-2 py-3 text-[#d6e0ed]">{user.token}</TableCell>
-                    <TableCell className="px-2 py-3">
-                      <Badge
-                        size="sm"
-                        color={user.status === "อนุมัติแล้ว" ? "success" : user.status === "ไม่อนุมัติ" ? "error" : "warning"}
-                        className={statusStyles[user.status as keyof typeof statusStyles]}
-                      >
-                        {user.status}
-                      </Badge>
-                    </TableCell>
                     <TableCell className="px-2 py-3 text-right">
                       <button
                         type="button"
@@ -135,7 +204,7 @@ export default function UserManagementContent() {
                 {filteredUsers.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={7}
+                      colSpan={6}
                       className="px-2 py-8 text-center text-[#8fa6c2]"
                     >
                       ไม่พบข้อมูลผู้ใช้งาน

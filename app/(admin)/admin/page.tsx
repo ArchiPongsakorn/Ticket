@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { LogOut } from "lucide-react";
 
@@ -41,6 +41,7 @@ export default function Home() {
 
   const [activePage, setActivePage] = useState("dashboard");
   const [role, setRole] = useState<DashboardRole | null>(null);
+  const roleRef = useRef<DashboardRole | null>(null);
 
   // ตรวจสอบ Role
   useEffect(() => {
@@ -53,17 +54,21 @@ export default function Home() {
         user?.role === "merchant"
       ) {
         setRole(user.role);
+        if (roleRef.current !== user.role) {
+          roleRef.current = user.role;
 
         // 1-HOME
         // หน้าแรกของแต่ละ Role
-        if (user.role === "staff") {
-          setActivePage("Token");
-        } else if (user.role === "merchant") {
-          setActivePage("shop");
-        } else {
-          setActivePage("dashboard");
+          if (user.role === "staff") {
+            setActivePage("Token");
+          } else if (user.role === "merchant") {
+            setActivePage("shop");
+          } else {
+            setActivePage("dashboard");
+          }
         }
       } else {
+        roleRef.current = null;
         setRole(null);
         router.replace(user ? "/" : "/login");
       }
@@ -90,11 +95,25 @@ export default function Home() {
   // จำกัดหน้า Staff และ Merchant
   const currentPage =
     //staff true & false ///// true & true = Token
-    role === "staff" && !["Token", "scan-qr"].includes(activePage)
+    role === "staff" && !["Token", "scan-qr", "scan-qr-shop"].includes(activePage)
       ? "Token"
       : role === "merchant" && !["shop", "scan-qr-shop"].includes(activePage)
         ? "shop"
         : activePage;
+
+  const pageTitle =
+    currentPage === "Token" || currentPage === "Admintoken" ? "เติม Token"
+      : currentPage === "scan-qr" || currentPage === "qrevent" ? "สแกนบัตรเข้างาน"
+        : currentPage === "shop" || currentPage === "Merchant" ? "ร้านค้า"
+          : currentPage === "scan-qr-shop" || currentPage === "qrmerchant" ? "สแกน QR TOKEN ร้านค้า"
+            : currentPage === "dashboard" ? "Dashboard"
+              : currentPage;
+
+  useEffect(() => {
+    if (role === "staff" || role === "merchant") {
+      document.title = `${pageTitle} | ${role === "staff" ? "Staff" : "Merchant"} UI`;
+    }
+  }, [pageTitle, role]);
 
   // เมนูสำหรับ Staff และ Merchant
   //3-ROLE-MENU
@@ -104,6 +123,7 @@ export default function Home() {
         [
           { id: "Token", label: "เติม Token" },
           { id: "scan-qr", label: "สแกน QR CODE เข้างาน" },
+          { id: "scan-qr-shop", label: "สแกน QR ตัด Token" },
         ]
       : //FALSE
         [
@@ -112,7 +132,7 @@ export default function Home() {
         ];
 
   // เลือกเนื้อหาที่จะแสดง
-  let content = <DashboardContent />;
+  let content = <DashboardContent onNavigate={setActivePage} />;
 
   if (currentPage === "check-slip") {
     content = <CheckSlipContent />;

@@ -34,9 +34,14 @@ export default function ProductCard({
         <span className={s.badge}>
           {p.type === "ticket" ? "บัตร" : "ของที่ระลึก"}
         </span>
-        <span className={s.glyph} aria-hidden="true">
-          {p.glyph}
-        </span>
+        {p.image ? (
+          <>
+            <img className={s.posterImage} src={p.image} alt={p.name} />
+            <span className={s.posterShade} aria-hidden="true" />
+          </>
+        ) : (
+          <span className={s.glyph} aria-hidden="true">{p.glyph}</span>
+        )}
       </div>
       <h3>{p.name}</h3>
       <p className={s.desc}>{p.desc}</p>

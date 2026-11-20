@@ -5,11 +5,12 @@ import type {
   UnitErrors,
   FieldDefinition,
   DeliveryMethod,
+  Product,
 } from "../../types/domain";
 
 import Field from "../ui/Field";
 import { fieldsForUnit } from "../../data/forms";
-import { PRODUCTS_BY_ID, SHIPPING_FEE } from "../../data/catalog";
+import { SHIPPING_FEE } from "../../data/catalog";
 import { validateFields, today } from "../../lib/validators";
 import { baht, num } from "../../lib/format";
 import { cx } from "../../lib/cx";
@@ -41,12 +42,14 @@ export default function AttendeeSection({
   errors,
   onChange,
   onMethod,
+  productsById,
 }: {
   units: OrderUnit[];
   attendees: AttendeesByUnit;
   errors: UnitErrors;
   onChange: (key: string, field: FieldDefinition, value: string) => void;
   onMethod: (key: string, method: DeliveryMethod) => void;
+  productsById: Record<string, Product>;
 }) {
   //complete check product by attendee
   //validate check {  }
@@ -81,7 +84,7 @@ export default function AttendeeSection({
 
       <div className={s.attList}>
         {units.map((u, i) => {
-          const p = PRODUCTS_BY_ID[u.id];
+          const p = productsById[u.id];
           const data = attendees[u.key] || {};
           const ok = complete(u);
           const sub =

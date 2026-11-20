@@ -1,9 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
 
-import dashboardData from "@/data/admin/dashboard.json";
+import { AUDIT_LOG_EVENT, readAuditLogs, type AuditLogEntry } from "@/lib/audit-log";
 import {
   TableBody,
   TableCell,
@@ -14,18 +14,30 @@ import {
 } from "@/components/admin/tailgrids/core/table";
 
 export default function AuditLogContent() {
+  const [logs, setLogs] = useState<AuditLogEntry[]>([]);
   const [search, setSearch] = useState("");
   const [actionFilter, setActionFilter] = useState("all");
 
+  useEffect(() => {
+    const refresh = () => setLogs(readAuditLogs());
+    refresh();
+    window.addEventListener(AUDIT_LOG_EVENT, refresh);
+    window.addEventListener("storage", refresh);
+    return () => {
+      window.removeEventListener(AUDIT_LOG_EVENT, refresh);
+      window.removeEventListener("storage", refresh);
+    };
+  }, []);
+
   const actionOptions = useMemo(
-    () => Array.from(new Set(dashboardData.auditLogs.map((log) => log.action))),
-    [],
+    () => Array.from(new Set(logs.map((log) => log.action))),
+    [logs],
   );
 
   const filteredLogs = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
 
-    return dashboardData.auditLogs.filter((log) => {
+    return logs.filter((log) => {
       const matchesSearch =
         !query ||
         [log.time, log.actor, log.action, log.detail].some((value) =>
@@ -35,7 +47,7 @@ export default function AuditLogContent() {
 
       return matchesSearch && matchesAction;
     });
-  }, [actionFilter, search]);
+  }, [actionFilter, logs, search]);
 
   const hasFilters = search.trim() !== "" || actionFilter !== "all";
 
@@ -45,8 +57,8 @@ export default function AuditLogContent() {
   };
 
   return (
-    <main className="min-h-svh min-w-0 flex-1 overflow-y-auto bg-[#0a1628] p-4 text-white sm:p-6 lg:p-8">
-      <div className="w-full">
+    <main className="h-svh min-h-0 min-w-0 flex-1 overflow-hidden bg-[#0a1628] p-4 text-white sm:p-6 lg:p-8">
+      <div className="flex h-full min-h-0 w-full flex-col">
         <h1 className="text-2xl font-bold tracking-tight">Audit Log</h1>
         <p className="mt-2 text-sm text-[#8fa6c2]">
           บันทึกทุกการกระทำของ Admin, Staff และร้านค้า เพื่อตรวจสอบย้อนหลัง
@@ -85,7 +97,7 @@ export default function AuditLogContent() {
 
         <div className="mt-4 flex min-h-8 items-center justify-between gap-3 text-sm text-[#8fa6c2]">
           <span>
-            แสดง {filteredLogs.length} จาก {dashboardData.auditLogs.length} รายการ
+            แสดง {filteredLogs.length} จาก {logs.length} รายการ
           </span>
           {hasFilters && (
             <button
@@ -99,7 +111,8 @@ export default function AuditLogContent() {
           )}
         </div>
 
-        <section className="mt-1 overflow-hidden rounded-2xl border border-[#244466] bg-[#10233d] p-3 sm:p-4">
+        <section className="mt-1 flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-[#244466] bg-[#10233d] p-3 sm:p-4">
+          <div className="min-h-0 flex-1 overflow-auto">
           <TableRoot className="w-full min-w-175 border-[#244466] text-left text-sm">
             <TableHeader>
               <TableRow className="border-b border-[#244466] text-[#8fa6c2]">
@@ -129,12 +142,13 @@ export default function AuditLogContent() {
               {filteredLogs.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={4} className="px-2 py-10 text-center text-[#8fa6c2]">
-                    ไม่พบรายการที่ตรงกับตัวกรอง
+                    {logs.length === 0 ? "ยังไม่มีประวัติการทำงาน" : "ไม่พบรายการที่ตรงกับตัวกรอง"}
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </TableRoot>
+          </div>
         </section>
       </div>
     </main>

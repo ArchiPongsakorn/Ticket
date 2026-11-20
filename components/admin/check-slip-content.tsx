@@ -1,6 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { usePersistentState } from "@/hooks/usePersistentState";
+import { recordAudit } from "@/lib/audit-log";
+import { CUSTOMER_ORDERS_STORAGE_KEY, type CustomerOrder } from "@/lib/api";
+import { readJSON, writeJSON } from "@/lib/storage";
+import { issueApprovedOrderTickets } from "@/lib/ticket-issuance";
+import type { Attendee } from "@/components/admin/event-tokens/types";
 
 const css = `
 /* CheckSlip — CSS ธรรมดา ไม่ต้องใช้ Tailwind */
@@ -223,6 +229,16 @@ const css = `
   margin: 0;
   font-weight: 500;
 }
+.cs-row.address-row {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 6px;
+}
+.cs-row.address-row dd {
+  overflow-wrap: anywhere;
+  text-align: right;
+  width: 100%;
+}
 .cs-row.warn dd {
   color: var(--cs-red);
   font-weight: 600;
@@ -335,51 +351,13 @@ type Order = {
   slipUrl?: string; // ใส่ URL รูปสลิปจริงตรงนี้
   status: Status;
   reason?: string;
+  sourceOrderId?: string;
+  shippingAddress?: string;
 };
 
 // ข้อมูลตัวอย่าง — เปลี่ยนไปดึงจาก API/Database ของคุณภายหลัง
-const initialOrders: Order[] = [
-  {
-    id: "0041",
-    name: "สมชาย ใจดี",
-    items: "บัตร × 2",
-    total: 1200,
-    slipAmount: 1200,
-    transferAt: "12 พ.ย. 2569 02:15",
-    email: "somchai@gmail.com",
-    status: "pending",
-  },
-  {
-    id: "0042",
-    name: "สุดา แสงทอง",
-    items: "บัตร × 1 · เสื้อ × 1",
-    total: 950,
-    slipAmount: 950,
-    transferAt: "12 พ.ย. 2569 01:48",
-    email: "suda@gmail.com",
-    status: "pending",
-  },
-  {
-    id: "0043",
-    name: "ประเสริฐ มีสุข",
-    items: "เสื้อ × 2",
-    total: 700,
-    slipAmount: 650,
-    transferAt: "11 พ.ย. 2569 23:30",
-    email: "prasert@gmail.com",
-    status: "pending",
-  },
-  {
-    id: "0044",
-    name: "วารี พูนทรัพย์",
-    items: "บัตร × 3",
-    total: 1800,
-    slipAmount: 1800,
-    transferAt: "11 พ.ย. 2569 22:05",
-    email: "waree@gmail.com",
-    status: "pending",
-  },
-];
+const initialOrders: Order[] = [];
+
 
 const baht = (n: number) => `฿${n.toLocaleString("th-TH")}`;
 
@@ -390,12 +368,56 @@ const statusLabel: Record<Status, string> = {
 };
 
 export default function CheckSlipContent() {
-  const [orders, setOrders] = useState<Order[]>(initialOrders);
-  const [selectedId, setSelectedId] = useState<string>(initialOrders[0].id);
-  const [reason, setReason] = useState("");
+  const [orders, setOrders] = usePersistentState<Order[]>("admin-check-slip-orders", initialOrders);
+  const [selectedId, setSelectedId] = usePersistentState("admin-check-slip-selected", "");
+  const [reason, setReason] = usePersistentState("admin-check-slip-reason", "");
   const [error, setError] = useState("");
 
-  const selected = orders.find((o) => o.id === selectedId)!;
+  useEffect(() => {
+    const syncOrders = () => {
+      const customerOrders = readJSON<CustomerOrder[]>(CUSTOMER_ORDERS_STORAGE_KEY, []);
+      const submittedOrders: Order[] = customerOrders
+        .filter((order) => order.status === "review")
+        .map((order) => ({
+          id: order.id,
+          name: order.buyerName ?? order.ownerEmail ?? "Customer",
+          items: order.tier,
+          total: order.total,
+          slipAmount: order.total,
+          transferAt: order.orderedAt,
+          email: order.ownerEmail ?? "",
+          slipUrl: order.slipUrl,
+          shippingAddress: order.hasMerch ? order.shippingAddress : undefined,
+          status: "pending",
+          sourceOrderId: order.id,
+        }));
+      setOrders((current) => {
+        return submittedOrders;
+      });
+    };
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === CUSTOMER_ORDERS_STORAGE_KEY) syncOrders();
+    };
+    syncOrders();
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("ticket:orders-updated", syncOrders);
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("ticket:orders-updated", syncOrders);
+    };
+  }, [setOrders]);
+  const selected = orders.find((o) => o.id === selectedId) ?? orders[0];
+  if (!selected) {
+    return (
+      <main className="cs-page">
+        <style>{css}</style>
+        <header>
+          <h1 className="cs-title">ตรวจสลิปการโอนเงิน</h1>
+          <p className="cs-subtitle">ไม่มีรายการรอตรวจสอบ</p>
+        </header>
+      </main>
+    );
+  }
   const isPending = selected.status === "pending";
   const amountMismatch = selected.slipAmount !== selected.total;
 
@@ -406,11 +428,32 @@ export default function CheckSlipContent() {
   }
 
   function update(status: Status, reasonText?: string) {
-    setOrders((prev) =>
-      prev.map((o) =>
-        o.id === selectedId ? { ...o, status, reason: reasonText } : o
-      )
+    setSelectedId(selected.id);
+    recordAudit(
+      "ตรวจสลิป",
+      `${status === "approved" ? "อนุมัติ" : "ปฏิเสธ"} คำสั่งซื้อ ${selected.id} ของ ${selected.name}${reasonText ? ` เหตุผล: ${reasonText}` : ""}`,
     );
+    setOrders((prev) =>
+      prev.map((order) => order.id === selected.id ? { ...order, status, reason: reasonText } : order),
+    );
+    if (selected.sourceOrderId) {
+      const customerOrders = readJSON<CustomerOrder[]>(CUSTOMER_ORDERS_STORAGE_KEY, []);
+      const sourceOrder = customerOrders.find((order) => order.id === selected.sourceOrderId);
+      const updatedOrders = customerOrders.map((order) => order.id !== selected.sourceOrderId
+        ? order
+        : { ...order, status: status === "approved" ? "paid" as const : "rejected" as const, reason: reasonText });
+      writeJSON(CUSTOMER_ORDERS_STORAGE_KEY, updatedOrders);
+
+      const attendees = readJSON<Attendee[]>("admin-event-attendees", []);
+      const updatedAttendees = status === "approved" && sourceOrder
+        ? issueApprovedOrderTickets({ ...sourceOrder, status: "paid" }, attendees)
+        : attendees.map((attendee) => attendee.orderId === selected.sourceOrderId
+          ? { ...attendee, active: false }
+          : attendee);
+      writeJSON("admin-event-attendees", updatedAttendees);
+      window.dispatchEvent(new Event("ticket:orders-updated"));
+      window.dispatchEvent(new Event("ticket:event-attendees-updated"));
+    }
     setReason("");
     setError("");
   }
@@ -443,7 +486,7 @@ export default function CheckSlipContent() {
       <div className="cs-grid">
         {/* รายการคำสั่งซื้อ */}
         <ul className="cs-list">
-          {orders.map((o) => (
+          {orders.filter((order) => order.status === "pending").map((o) => (
             <li key={o.id}>
               <button
                 type="button"
@@ -461,6 +504,9 @@ export default function CheckSlipContent() {
               </button>
             </li>
           ))}
+          {orders.every((order) => order.status !== "pending") && (
+            <li className="cs-item-meta">ไม่มีรายการรอตรวจสอบ</li>
+          )}
         </ul>
 
         {/* รายละเอียด */}
@@ -505,6 +551,12 @@ export default function CheckSlipContent() {
                   <dt>อีเมลผู้ซื้อ</dt>
                   <dd>{selected.email}</dd>
                 </div>
+                {selected.shippingAddress && (
+                  <div className="cs-row address-row">
+                    <dt>ที่อยู่จัดส่ง</dt>
+                    <dd>{selected.shippingAddress}</dd>
+                  </div>
+                )}
               </dl>
 
               {amountMismatch && (
@@ -551,13 +603,13 @@ export default function CheckSlipContent() {
                   </div>
 
                   <p className="cs-note">
-                    เมื่อ Approve ระบบจะสร้าง QR Code และส่งทาง Gmail ไปยังอีเมลของผู้ซื้อ
+                    เมื่อ Approve ระบบจะเปิดใช้บัตรและ QR Code ในหน้า Profile ของผู้ซื้อ ใช้สแกนเข้างานหรือสแกนตัด Token ได้
                   </p>
                 </>
               ) : (
                 <div className={`cs-result ${selected.status}`}>
                   {selected.status === "approved"
-                    ? "อนุมัติแล้ว — ส่ง QR Code ให้ผู้ซื้อเรียบร้อย"
+                    ? "อนุมัติแล้ว — QR Code พร้อมใช้งานในหน้า Profile ของผู้ซื้อ"
                     : `ปฏิเสธแล้ว — เหตุผล: ${selected.reason}`}
                 </div>
               )}

@@ -1,7 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import dashboardData from "@/data/admin/dashboard.json";
+import { useEffect, useState } from "react";
+import { usePersistentState } from "@/hooks/usePersistentState";
+import { recordAudit } from "@/lib/audit-log";
+import { ADMIN_STORES_STORAGE_KEY, INITIAL_MANAGED_STORES, removeMockStores, type ManagedStore } from "@/lib/admin-stores";
+import { AUTH_CHANGE_EVENT, getRegisteredUsers, syncMerchantRoles, type AuthUser } from "@/lib/local-auth";
 import { Badge } from "@/components/admin/tailgrids/core/badge";
 import {
   TableBody,
@@ -12,57 +15,62 @@ import {
   TableRow,
 } from "@/components/admin/tailgrids/core/table";
 
-type ManagedStore = {
-  id: string;
-  name: string;
-  product: string;
-  adminEmail: string;
-  status: string;
-};
-
-const INITIAL_STORES: ManagedStore[] = dashboardData.storeSales.map(
-  (store) => ({
-    id: store.id,
-    name: store.name,
-    product: store.product.name,
-    adminEmail: store.adminEmail,
-    status: store.status,
-  }),
-);
-
 export default function StoreManagementContent() {
-  const [stores, setStores] = useState<ManagedStore[]>(INITIAL_STORES);
-  const [storeName, setStoreName] = useState("");
-  const [product, setProduct] = useState("");
-  const [adminEmail, setAdminEmail] = useState("");
+  const [stores, setStores, storesReady] = usePersistentState<ManagedStore[]>(ADMIN_STORES_STORAGE_KEY, INITIAL_MANAGED_STORES);
+  const visibleStores = removeMockStores(stores);
+  const [storeName, setStoreName] = usePersistentState("admin-store-draft-name", "");
+  const [product, setProduct] = usePersistentState("admin-store-draft-product", "");
+  const [adminEmail, setAdminEmail] = usePersistentState("admin-store-draft-email", "");
   const [message, setMessage] = useState("");
+  const [registeredUsers, setRegisteredUsers] = useState<AuthUser[]>([]);
+
+  useEffect(() => {
+    if (!storesReady) return;
+    if (visibleStores.length !== stores.length) setStores(visibleStores);
+    syncMerchantRoles(visibleStores);
+  }, [setStores, stores, storesReady]);
+
+  useEffect(() => {
+    const refreshUsers = () => setRegisteredUsers(getRegisteredUsers());
+    refreshUsers();
+    window.addEventListener("storage", refreshUsers);
+    window.addEventListener(AUTH_CHANGE_EVENT, refreshUsers);
+    return () => {
+      window.removeEventListener("storage", refreshUsers);
+      window.removeEventListener(AUTH_CHANGE_EVENT, refreshUsers);
+    };
+  }, []);
 
   const handleCreateStore = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const name = storeName.trim();
     const productName = product.trim();
-    const email = adminEmail.trim();
+    const emailInput = adminEmail.trim();
+    const registeredMerchant = registeredUsers.find((user) => user.email.toLowerCase() === emailInput.toLowerCase());
 
-    if (!name || !productName || !email) {
+    if (!name || !productName || !emailInput) {
       setMessage("กรอกชื่อร้านค้า สินค้า และอีเมล Admin ให้ครบก่อน");
       return;
     }
 
-    if (stores.some((store) => store.name.toLowerCase() === name.toLowerCase())) {
+    if (!registeredMerchant) {
+      setMessage("อีเมลนี้ยังไม่ได้สมัครสมาชิก กรุณาให้ Merchant สมัครก่อน");
+      return;
+    }
+    const email = registeredMerchant.email;
+
+    if (visibleStores.some((store) => store.name.toLowerCase() === name.toLowerCase())) {
       setMessage("มีชื่อร้านค้านี้อยู่แล้ว");
       return;
     }
 
-    setStores((currentStores) => [
-      ...currentStores,
-      {
-        id: `store-${Date.now()}`,
-        name,
-        product: productName,
-        adminEmail: email,
-        status: "เปิดขาย",
-      },
-    ]);
+    const nextStores = [
+      ...visibleStores,
+      { id: `store-${Date.now()}`, name, product: productName, adminEmail: email, status: "เปิดขาย" },
+    ];
+    setStores(nextStores);
+    syncMerchantRoles(nextStores);
+    recordAudit("สร้างร้านค้า", `${name} · ${productName} · ${email}`);
     setStoreName("");
     setProduct("");
     setAdminEmail("");
@@ -72,27 +80,11 @@ export default function StoreManagementContent() {
   const handleDeleteStore = (store: ManagedStore) => {
     if (!window.confirm(`ต้องการลบร้านค้า ${store.name} ใช่หรือไม่?`)) return;
 
-    setStores((currentStores) =>
-      currentStores.filter((currentStore) => currentStore.id !== store.id),
-    );
+    const nextStores = visibleStores.filter((currentStore) => currentStore.id !== store.id);
+    setStores(nextStores);
+    syncMerchantRoles(nextStores);
+    recordAudit("ลบร้านค้า", store.name);
     setMessage(`ลบร้านค้า ${store.name} แล้ว`);
-  };
-
-  const handleChangeAdmin = (store: ManagedStore) => {
-    const nextEmail = window.prompt(
-      `อีเมล Admin ใหม่สำหรับ ${store.name}`,
-      store.adminEmail,
-    );
-    if (!nextEmail?.trim()) return;
-
-    setStores((currentStores) =>
-      currentStores.map((currentStore) =>
-        currentStore.id === store.id
-          ? { ...currentStore, adminEmail: nextEmail.trim() }
-          : currentStore,
-      ),
-    );
-    setMessage(`เปลี่ยน Admin ของ ${store.name} แล้ว`);
   };
 
   return (
@@ -117,7 +109,7 @@ export default function StoreManagementContent() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {stores.map((store) => (
+                  {visibleStores.map((store) => (
                     <TableRow
                       key={store.id}
                       className="border-b border-[#244466] last:border-b-0"
@@ -142,13 +134,6 @@ export default function StoreManagementContent() {
                       </TableCell>
                       <TableCell className="px-2 py-3">
                         <div className="flex justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleChangeAdmin(store)}
-                            className="rounded-lg border border-[#244466] px-3 py-2 text-xs text-[#d6e0ed] hover:bg-[#19395e]"
-                          >
-                            เปลี่ยน Admin
-                          </button>
                           <button
                             type="button"
                             onClick={() => handleDeleteStore(store)}
@@ -194,15 +179,21 @@ export default function StoreManagementContent() {
                 />
               </label>
               <label className="block text-sm text-[#d6e0ed]">
-                Admin ประจำร้าน (อีเมล)
+                Merchant ประจำร้าน (อีเมลที่สมัครแล้ว)
                 <input
                   type="email"
-                  placeholder="admin@email.com"
+                  list="registered-merchant-emails"
+                  placeholder="เลือกอีเมลสมาชิกที่สมัครแล้ว"
                   value={adminEmail}
                   onChange={(event) => setAdminEmail(event.target.value)}
                   className="mt-2 w-full rounded-xl border border-[#244466] bg-[#0a1628] px-3 py-3 text-sm text-white outline-none placeholder:text-[#7188a5]"
                   required
                 />
+                <datalist id="registered-merchant-emails">
+                  {registeredUsers.map((user) => (
+                    <option key={user.id} value={user.email}>{user.username}</option>
+                  ))}
+                </datalist>
               </label>
               <button
                 type="submit"

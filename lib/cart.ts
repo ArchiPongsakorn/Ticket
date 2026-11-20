@@ -1,4 +1,4 @@
-import type { CartLine, CartTotals, OrderUnit } from "../types/domain";
+import type { CartLine, CartTotals, OrderUnit, Product } from "../types/domain";
 import { PRODUCTS_BY_ID } from "../data/catalog";
 
 /** คีย์ประจำบรรทัดในตะกร้า (สินค้า + ไซซ์) */
@@ -8,7 +8,7 @@ export const lineKey = (line: CartLine): string => `${line.id}|${line.option}`;
 
 //คำนวนสินค้า 
 //
-export function summarize(lines: CartLine[]): CartTotals {
+export function summarize(lines: CartLine[], productsById: Record<string, Product> = PRODUCTS_BY_ID): CartTotals {
   const sum = {
     count: 0,
     total: 0,
@@ -20,7 +20,7 @@ export function summarize(lines: CartLine[]): CartTotals {
   //for of loop
   for (const l of lines) {
     //get id re product
-    const p = PRODUCTS_BY_ID[l.id];
+    const p = productsById[l.id];
     sum.count += l.qty;
     sum.total += l.qty * p.price;
     sum.tokens += l.qty * (p.tokens || 0); 
@@ -36,9 +36,9 @@ export function summarize(lines: CartLine[]): CartTotals {
 /**
  * แตกสินค้าเป็นรายชิ้น: บัตรทุกใบ (กรอกข้อมูลผู้ถือบัตร) และของที่ระลึกทุกชิ้น (เลือกรับที่งานหรือจัดส่ง)
  */
-export function orderUnits(lines: CartLine[]): OrderUnit[] {
+export function orderUnits(lines: CartLine[], productsById: Record<string, Product> = PRODUCTS_BY_ID): OrderUnit[] {
   return lines.flatMap((l) => {
-    const p = PRODUCTS_BY_ID[l.id];
+    const p = productsById[l.id];
     return Array.from({ length: l.qty }, (_, i) => ({
       key: [l.id, l.option, i + 1].filter(Boolean).join("-"),
       id: l.id,

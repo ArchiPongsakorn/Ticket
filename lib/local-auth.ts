@@ -20,21 +20,19 @@ type Session = {
 export const AUTH_CHANGE_EVENT = "ticket:auth-changed";
 export const ACCOUNT_STORAGE_KEY = "ticket:local-auth:accounts:v1";
 export const SESSION_STORAGE_KEY = "ticket:local-auth:session:v1";
+const ADMIN_STORES_STORAGE_KEY = "admin-managed-stores";
 
 function normalize(value: string) {
   return value.trim().toLowerCase();
 }
 
-function getAccounts(): Account[] {
-  const raw = localStorage.getItem(ACCOUNT_STORAGE_KEY);
-  let users: Account[] = [];
-
+function getStoredAccounts(): Account[] {
   try {
-    const parsed = raw ? JSON.parse(raw) : [];
+    const parsed = JSON.parse(localStorage.getItem(ACCOUNT_STORAGE_KEY) ?? "[]");
     if (Array.isArray(parsed)) {
-      users = parsed.filter(
+      return parsed.filter(
         (item) =>
-          item?.role === "user" &&
+          (item?.role === "user" || item?.role === "merchant") &&
           typeof item.id === "string" &&
           typeof item.username === "string" &&
           typeof item.email === "string" &&
@@ -42,8 +40,13 @@ function getAccounts(): Account[] {
       );
     }
   } catch {
-    users = [];
+    return [];
   }
+  return [];
+}
+
+function getAccounts(): Account[] {
+  const users = getStoredAccounts();
 
   const specialAccounts: Account[] = ROLE_ACCOUNTS.map((account) => ({
     ...account,
@@ -90,15 +93,96 @@ export function getCurrentUser(): AuthUser | null {
 
     if (!account) return null;
 
+    let role = account.role;
+    if (role === "user") {
+      const stores = JSON.parse(localStorage.getItem(ADMIN_STORES_STORAGE_KEY) ?? "[]") as Array<{ adminEmail?: string }>;
+      if (Array.isArray(stores) && stores.some((store) => store.adminEmail?.trim().toLowerCase() === account.email.toLowerCase())) {
+        role = "merchant";
+      }
+    }
+
     return {
       id: account.id,
       username: account.username,
       email: account.email,
-      role: account.role,
+      role,
     };
   } catch {
     return null;
   }
+}
+
+export function getRegisteredUsers(): AuthUser[] {
+  if (typeof window === "undefined") return [];
+  return getStoredAccounts()
+    .map(({ id, username, email, role }) => ({ id, username, email, role }));
+}
+
+export function syncMerchantRoles(stores?: Array<{ adminEmail?: string }>) {
+  if (typeof window === "undefined") return;
+
+  let assignedStores = stores;
+  if (!assignedStores) {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(ADMIN_STORES_STORAGE_KEY) ?? "[]");
+      assignedStores = Array.isArray(parsed) ? parsed : [];
+    } catch {
+      assignedStores = [];
+    }
+  }
+  const merchantEmails = new Set(
+    assignedStores.map((store) => normalize(store.adminEmail ?? "")).filter(Boolean),
+  );
+  const accounts = getStoredAccounts();
+  let changed = false;
+  const updated = accounts.map((account) => {
+    const role: AuthRole = merchantEmails.has(normalize(account.email)) ? "merchant" : "user";
+    if (account.role === role) return account;
+    changed = true;
+    return { ...account, role };
+  });
+  if (changed) {
+    localStorage.setItem(ACCOUNT_STORAGE_KEY, JSON.stringify(updated));
+    notifyChange();
+  }
+}
+
+export function deleteRegisteredUser(email: string): boolean {
+  if (typeof window === "undefined") return false;
+
+  const targetEmail = normalize(email);
+  let accounts: Account[];
+  try {
+    const parsed = JSON.parse(localStorage.getItem(ACCOUNT_STORAGE_KEY) ?? "[]");
+    if (!Array.isArray(parsed)) return false;
+    accounts = parsed as Account[];
+  } catch {
+    return false;
+  }
+
+  const removedIds = new Set(
+    accounts
+      .filter((account) => (account.role === "user" || account.role === "merchant") && normalize(account.email) === targetEmail)
+      .map((account) => account.id),
+  );
+  if (removedIds.size === 0) return false;
+
+  localStorage.setItem(
+    ACCOUNT_STORAGE_KEY,
+    JSON.stringify(accounts.filter((account) => !removedIds.has(account.id))),
+  );
+
+  for (const storage of [localStorage, sessionStorage]) {
+    try {
+      const session = JSON.parse(storage.getItem(SESSION_STORAGE_KEY) ?? "null") as Session | null;
+      if (session && removedIds.has(session.userId)) storage.removeItem(SESSION_STORAGE_KEY);
+    } catch {
+      storage.removeItem(SESSION_STORAGE_KEY);
+    }
+  }
+
+  notifyChange();
+  return true;
 }
 
 export async function registerUser(values: {
@@ -159,7 +243,7 @@ export async function registerUser(values: {
     if (Array.isArray(parsed)) {
       //กรองข้อมูลบัญชี User? pass=string?
       saved = parsed.filter(
-        (item) => item?.role === "user" && typeof item.password === "string",
+        (item) => (item?.role === "user" || item?.role === "merchant") && typeof item.password === "string",
       );
     }
 
@@ -200,7 +284,7 @@ export async function loginLocalUser(
 
   saveSession(account.id, remember);
 
-  return {
+  return getCurrentUser() ?? {
     id: account.id,
     username: account.username,
     email: account.email,

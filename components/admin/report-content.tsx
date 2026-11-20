@@ -1,6 +1,10 @@
 "use client";
 
-import dashboardData from "@/data/admin/dashboard.json";
+import { useEffect } from "react";
+import { usePersistentState } from "@/hooks/usePersistentState";
+import { ADMIN_STORES_STORAGE_KEY, INITIAL_MANAGED_STORES, removeMockStores, type ManagedStore } from "@/lib/admin-stores";
+import type { ActivityLog } from "@/components/admin/event-tokens/types";
+import { readJSON } from "@/lib/storage";
 import {
   TableBody,
   TableCell,
@@ -10,18 +14,31 @@ import {
   TableRow,
 } from "@/components/admin/tailgrids/core/table";
 
-const totalStoreSales = dashboardData.storeSales.reduce(
-  (total, store) => total + store.Sale,
-  0,
-);
-
-const totalProductSales = dashboardData.orders.reduce(
-  (total, order) =>
-    total + order.priceTicket + order.priceShirt,
-  0,
-);
-
 export default function ReportContent() {
+  const [stores, setStores, storesReady] = usePersistentState<ManagedStore[]>(ADMIN_STORES_STORAGE_KEY, INITIAL_MANAGED_STORES);
+  const [logs, setLogs] = usePersistentState<ActivityLog[]>("admin-event-activity-logs", []);
+  const visibleStores = removeMockStores(stores);
+  useEffect(() => {
+    if (storesReady && visibleStores.length !== stores.length) setStores(visibleStores);
+    const refresh = (event: StorageEvent) => {
+      if (event.key === ADMIN_STORES_STORAGE_KEY) {
+        setStores(removeMockStores(readJSON<ManagedStore[]>(ADMIN_STORES_STORAGE_KEY, INITIAL_MANAGED_STORES)));
+      }
+      if (event.key === "admin-event-activity-logs") {
+        setLogs(readJSON<ActivityLog[]>("admin-event-activity-logs", []));
+      }
+    };
+    window.addEventListener("storage", refresh);
+    return () => window.removeEventListener("storage", refresh);
+  }, [setLogs, setStores, stores, storesReady]);
+
+  const storeReports = visibleStores.map((store) => {
+    const sales = logs.filter((log) => log.storeId === store.id && typeof log.tokenAmount === "number");
+    const tokens = sales.reduce((sum, sale) => sum + Number(sale.tokenAmount ?? 0), 0);
+    return { ...store, salesCount: sales.length, tokens };
+  });
+  const totalStoreSales = storeReports.reduce((sum, store) => sum + store.tokens, 0);
+  const totalTransactions = storeReports.reduce((sum, store) => sum + store.salesCount, 0);
   return (
     <main className="min-h-svh min-w-0 flex-1 overflow-y-auto bg-[#0a1628] p-4 text-white sm:p-6 lg:p-8">
       <div className="w-full max-w-none">
@@ -33,12 +50,7 @@ export default function ReportContent() {
             </p>
           </div>
 
-          <button
-            type="button"
-            className="rounded-xl border border-[#49a5fb] px-4 py-2.5 text-sm font-semibold text-[#49a5fb] transition-colors hover:bg-[#19395e]"
-          >
-            Export CSV
-          </button>
+
         </div>
 
         <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -49,15 +61,15 @@ export default function ReportContent() {
             </p>
           </div>
           <div className="rounded-2xl border border-[#244466] bg-[#10233d] p-4">
-            <p className="text-sm text-[#8fa6c2]">ยอดขายบัตรและเสื้อ (บาท)</p>
+            <p className="text-sm text-[#8fa6c2]">จำนวนรายการขาย</p>
             <p className="mt-3 text-2xl font-bold text-[#4da6ff]">
-              {totalProductSales}
+              {totalTransactions}
             </p>
           </div>
           <div className="rounded-2xl border border-[#244466] bg-[#10233d] p-4">
-            <p className="text-sm text-[#8fa6c2]">ค่าใช้จ่ายผู้เข้าร่วม (Token)</p>
+            <p className="text-sm text-[#8fa6c2]">ร้านค้าที่จัดการ</p>
             <p className="mt-3 text-2xl font-bold text-[#35d6c0]">
-              {totalStoreSales}
+              {storeReports.length}
             </p>
           </div>
         </section>
@@ -74,33 +86,41 @@ export default function ReportContent() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {dashboardData.storeSales.map((store) => (
+                {storeReports.map((store) => {
+                  const progress = totalStoreSales > 0 ? Math.round((store.tokens / totalStoreSales) * 100) : 0;
+                  return (
                   <TableRow
-                    key={store.name}
+                    key={store.id}
                     className="border-b border-[#244466] last:border-b-0"
                   >
                     <TableCell className="px-2 py-3 font-medium text-[#d6e0ed]">
                       {store.name}
                     </TableCell>
                     <TableCell className="px-2 py-3 text-[#d6e0ed]">
-                      {store.Sale}
+                      {store.tokens.toLocaleString("th-TH")}
                     </TableCell>
                     <TableCell className="px-2 py-3 text-[#8fa6c2]">
-                      {store.progress}%
+                      {progress}%
                     </TableCell>
                     <TableCell className="px-2 py-3">
                       <div className="h-2 overflow-hidden rounded-full bg-[#1d3858]">
                         <div
                           className="h-full rounded-full"
                           style={{
-                            width: `${store.progress}%`,
-                            backgroundColor: store.barColor,
+                            width: `${progress}%`,
+                            backgroundColor: "#49a5fb",
                           }}
                         />
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
+                {storeReports.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={4} className="px-2 py-8 text-center text-[#8fa6c2]">ยังไม่มีร้านค้าในระบบ</TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </TableRoot>
           </div>

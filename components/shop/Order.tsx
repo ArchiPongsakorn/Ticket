@@ -1,5 +1,4 @@
-import type { CartLine, CartTotals } from "../../types/domain";
-import { PRODUCTS_BY_ID } from "../../data/catalog";
+import type { CartLine, CartTotals, Product } from "../../types/domain";
 import { lineKey } from "../../lib/cart";
 import { baht, num } from "../../lib/format";
 import s from "./shop.module.css";
@@ -7,12 +6,14 @@ import s from "./shop.module.css";
 /** ตะกร้าฝั่งขวา: ปรับจำนวน ลบรายการ ดูยอดรวมและ token */
 export default function CartPanel({
   lines,
+  productsById,
   totals,
   onQty,
   onRemove,
   onCheckout,
 }: {
   lines: CartLine[];
+  productsById: Record<string, Product>;
   totals: CartTotals;
   onQty: (key: string, delta: number) => void;
   onRemove: (key: string) => void;
@@ -38,7 +39,7 @@ export default function CartPanel({
 
       <ul className={s.lines}>
         {lines.map((l) => {
-          const p = PRODUCTS_BY_ID[l.id];
+          const p = productsById[l.id];
           const key = lineKey(l);
           return (
             <li key={key} className={s.line}>
